@@ -4,6 +4,7 @@ import random
 from math import pi, cos, asin, sqrt
 from sklearn.cluster import KMeans
 import DataWrappers
+import munkres
 
 # Cluster the coordinates using KMeans and add cluster labels to the field data    
 def cluster_coordinates(field_data, n_clusters=5, iters=2000, random_state=random.randint(0, 1000)):
@@ -44,17 +45,55 @@ def populate_cluster_objects(field_data, estimate_data=True):
     return clusters
 
 
+def assign_genomes_to_clusters(clusters, specifier_matrix="../data/Genetic_Data/specifier_matrix_2023.csv"):
+    """
+    This function assigns specific groups of genomes to clusters based on how close the
+    genetic sample was taken to the cluster. It only assigns each genome once.
+    
+    parameters:
+    clusters (list): List of Cluster objects to which genomes will be assigned.
+    genetic_data (str): Path to the genetic data CSV file.
+    """
+    # Read the genetic data file
+    specifier = pd.read_csv(specifier_matrix)
+    
+    # Extract latitude and longitude pairs from the specifier matrix
+    genome_coords = list(zip(specifier.iloc[:, 1], specifier.iloc[:, 2]))
+    
+    for i in range(len(genome_coords)):
+        lat, lon = genome_coords[i]
+        
+        # Find the closest cluster to the genome coordinate
+        closest_cluster = None
+        min_distance = float('inf')
+
+        for cluster in clusters:
+            if cluster.genome_assignment is not None:
+                continue
+            dist = distance(lat, lon, cluster.latitude, cluster.longitude)
+            if dist < min_distance:
+                min_distance = dist
+                closest_cluster = cluster
+        closest_cluster.genome_assignment = i     
+        
+    
+    
+    
+    
+
+# Function to calculate distance between two coordinates in km using Haversine formula
+def distance(lat1, lon1, lat2, lon2):
+    r = 6371  # km
+    p = pi / 180
+
+    a = 0.5 - cos((lat2 - lat1) * p) / 2 + cos(lat1 * p) * cos(lat2 * p) * (1 - cos((lon2 - lon1) * p)) / 2
+    return int(2 * r * asin(sqrt(a)) * 1000)  # Convert km to meters for more precision
+
+
 
 # This function takes a list of clusters and calculates the distance between each pair of clusters, storing the results in a distance matrix 
 #The csv file is outputted to the specified path and returned by the function.
 def create_cluster_distance_matrix(clusters, output_path='../data/cluster_distances.csv'):
-    # Function to calculate distance between two coordinates in km using Haversine formula
-    def distance(lat1, lon1, lat2, lon2):
-        r = 6371  # km
-        p = pi / 180
-
-        a = 0.5 - cos((lat2 - lat1) * p) / 2 + cos(lat1 * p) * cos(lat2 * p) * (1 - cos((lon2 - lon1) * p)) / 2
-        return int(2 * r * asin(sqrt(a)) * 1000)  # Convert km to meters for more precision
 
     # Create a distance matrix with cluster IDs as both row and column headers
     grid = np.eye(len(clusters) + 1, dtype=int)
@@ -87,7 +126,8 @@ def cluster_data_to_csv(clusters, output_path='../data/cluster_data.csv'):
         'Latitude': [],
         'Longitude': [],
         'Average Count': [],
-        'Average GDD': []
+        'Average GDD': [],
+        'Genome Assignment': []
     }
     
     for cluster in clusters:
@@ -96,6 +136,13 @@ def cluster_data_to_csv(clusters, output_path='../data/cluster_data.csv'):
         data['Longitude'].append(cluster.longitude)
         data['Average Count'].append(cluster.data[0])  # Assuming first element is average count
         data['Average GDD'].append(cluster.data[1])  # Assuming second element is average GDD
+        if cluster.genome_assignment is not None:
+            data['Genome Assignment'].append(cluster.genome_assignment)
+        else:
+            data['Genome Assignment'].append('')
     
     df = pd.DataFrame(data)
     df.to_csv(output_path, index=False)
+    
+    
+# assign_genomes_to_clusters(None, specifier_matrix="../data/Genetic_Data/specifier_matrix_2023.csv")

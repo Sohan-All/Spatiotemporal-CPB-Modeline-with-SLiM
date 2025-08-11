@@ -21,6 +21,8 @@ def main():
     
     #Put the data for clusters into a list of Cluster objects
     clusters = GenerateClusterData.populate_cluster_objects(field_data, estimate_data=True)
+    
+    GenerateClusterData.assign_genomes_to_clusters(clusters, specifier_matrix="../data/Genetic_Data/specifier_matrix_2023.csv")
 
     #Generate a distance matrix for the clusters
     distances = GenerateClusterData.create_cluster_distance_matrix(clusters, output_path='../data/cluster_distances.csv')   
