@@ -190,10 +190,10 @@ def generateMutationLists(year, specifier_matrix="../data/Genetic_Data/specifier
         
         
         
-    for i, mutation_list in enumerate(mutation_lists):
-        print(f"Mutation list {i+1}:")
-        print(mutation_list)
-        print('-' * 40)
+    # for i, mutation_list in enumerate(mutation_lists):
+    #     print(f"Mutation list {i+1}:")
+    #     print(mutation_list)
+    #     print('-' * 40)
     
     # Output each element of mutation_lists to a CSV such that each list within the 2D list takes up two columns [mutation idx, base]
     with open(output_path, 'w', newline='') as csvfile:
@@ -201,7 +201,7 @@ def generateMutationLists(year, specifier_matrix="../data/Genetic_Data/specifier
         # Write header
         header = []
         for i in range(len(mutation_lists)):
-            header.extend([f"Index_{i+1}", f"Base_{i+1}"])
+            header.extend([f"Index_{i}", f"Base_{i}"])
         writer.writerow(header)
         # Find the max length among all mutation lists
         max_len = max(len(lst) for lst in mutation_lists)

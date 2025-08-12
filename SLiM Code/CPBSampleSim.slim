@@ -3,11 +3,11 @@ initialize()
 {
 
     initializeSLiMOptions(nucleotideBased=T);
-    defineConstant("L", initializeAncestralNucleotides("..\\data\\ref.fasta")); 
+    defineConstant("L", initializeAncestralNucleotides("..\\data\\Genetic_Data\\refFull.fasta")); 
     initializeMutationTypeNuc("m1", 0.5, "f", 0.0);
-    initializeGenomicElementType("g1", m1, 1.0, mmJukesCantor(1e-7));
+    initializeGenomicElementType("g1", m1, 1.0, mmJukesCantor(0.0)); //1e-7
     initializeGenomicElement(g1, 0, L-1);
-    initializeRecombinationRate(1e-8);
+    initializeRecombinationRate(0); //1e-8
 
     /*
 	// set the overall mutation rate
@@ -25,101 +25,83 @@ initialize()
 // create a population of 500 individuals
 1 early()
 {
-	
     // Read in cluster data from CSV files
-    if (!fileExists("..\\data\\cluster_distances.csv")) {
-        print("cluster_distances.csv not found");
-        sim.simulationFinished();
-    }
-    distDF = readCSV("..\\data\\cluster_distances.csv", colNames=T, sep=",");
-    if (isNULL(distDF)) {
-    	print("Could not read cluster_distances.csv");
-    	sim.simulationFinished();
-    }
-
-    if (!fileExists("..\\data\\cluster_data.csv")) {
-        print("cluster_data.csv not found");
-        sim.simulationFinished();
-    }
+    migrationRatesDF = readCSV("..\\data\\migration_rates.csv", colNames=T, sep=",");
+    
     propDF = readCSV("..\\data\\cluster_data.csv", colNames=T, sep=",");
-    if (isNULL(propDF)) {
-    	print("Could not read cluster_data.csv");
-    	sim.simulationFinished();
+
+    //mutDF = readCSV("..\\data\\Genetic_Data\\mutation_lists.csv", colNames=T, sep=",");
+    defineConstant("mutDF", readCSV("..\\data\\Genetic_Data\\mutation_lists.csv", colNames=T, sep=","));
+
+    if (isNULL(mutDF) | isNULL(migrationRatesDF) | isNULL(propDF)) {
+        print("Could not read one of or more of the required CSV files");
+        sim.simulationFinished();
     }
 
-
-    distMX = distDF.asMatrix();
-
+    migrationRates = migrationRatesDF.asMatrix();
 
 
+    // Create each subpopulation based on the amount of clusters specified
+    // Sets the population of each supop to the average count of individuals in that cluster times a multiplier
     for (i in 0:(propDF.nrow-1)) {
         sim.addSubpop("p"+i, asInteger(propDF.getValue("Average Count")[i] * 100));
     }
-    CUTOFF = 15000;
     
-    for (i in 0:(ncol(distMX)-1)) {
-        count = 0;
-        for (j in 0:(nrow(distMX)-1)) {
-            if (distMX[i+ncol(distMX)*j] < CUTOFF) {
-            	count = count + 1;
-            }
+    // Create a list of subpopulations which are assigned to each genome
+    numGenomes = mutDF.ncol / 2;
+    genomeAssignments = integer(asInteger(numGenomes)-1);
+    print(length(genomeAssignments));
+
+    for (i in 0:(propDF.nrow-1)) {
+        if (propDF.getValue("Genome Assignment")[i] != "") {
+            genomeAssignments[asInteger(propDF.getValue("Genome Assignment")[i])] = i;
         }
-        if (count > 0) {
-            migrationRate = 0.7 / count; // 0.3 chance of not migrating
-            for (j in 0:(ncol(distMX)-1)) {
-            	if (i != j & distMX[i+ncol(distMX)*j] < CUTOFF) {
-                    sim.subpopulations[i].setMigrationRates(sim.subpopulations[j], migrationRate);
-            	}
-            }
+    }
+
+    defineConstant("genomeAssignmentsConst", genomeAssignments);
+    
+    // Set the migration rates for each subpopulation pair based on the migration rates matrix
+    for (i in 0:(ncol(migrationRates)-1)) {
+        for (j in 0:(nrow(migrationRates)-1)) {
+            if (i != j) 
+                sim.subpopulations[i].setMigrationRates(sim.subpopulations[j], migrationRates[i+ncol(migrationRates)*j]);
         }
     }
 
     //Remove the first line of refFastaString which is the header
-    refFastaStrings = readFile("..\\data\\ref.fasta");
+    refFastaStrings = readFile("..\\data\\Genetic_Data\\refFull.fasta");
     refFastaString = "";
     for (s in refFastaStrings) {
         if (!strprefix(s, ">")) { 
             refFastaString = refFastaString + s;
         }
     }
-    
-    //sim.subpopulations[0].outputVCFSample(5);
-
-    sim.subpopulations[0].haplosomes.addNewDrawnMutation(m1, 0, sim.subpopulations[0], "T");
-
-    sim.subpopulations[0].haplosomes.addNewDrawnMutation(m1, 3, sim.subpopulations[0], "T");
-
-    sim.subpopulations[0].haplosomes.addNewDrawnMutation(m1, 12, sim.subpopulations[0], "T");
-
-    print("=======================================================================================");
-    print("=======================================================================================");
-
-    sim.subpopulations[0].outputVCFSample(5);
-
-
-    /*for (i in 0:(propDF.nrow-1)) {
-        fastaPath = "..\\data\\FASTAs\\" + i + ".fasta";
-        if (!fileExists(fastaPath)) {
-            print("FASTA file for subpopulation " + i + " not found");
-            sim.simulationFinished();
-        }
-
-        fastaString = readFile(fastaPath);
-        if (isNULL(fastaString)) {
-            print("Could not read FASTA file for subpopulation " + i);
-            sim.simulationFinished();
-        }
-
-        for (j in 0:(length(refFastaString)-1)) {
-            if (refFastaString[j] != fastaString[j]) {
-                sim.subpopulations[i].haplosomes.addNewDrawnMutation(m1, j, sim.subpopulations[i], fastaString[j]);
-            }
-        }        
-    }*/
 }
-// run to tick 10000
-10000 early()
+
+1 late() {
+    print("1");
+    for (i in 0:(length(genomeAssignmentsConst)-1)) {
+        subpop = sim.subpopulations[genomeAssignmentsConst[i]];
+        //print(genomeAssignmentsConst[i]);
+        for (j in 0:(mutDF.nrow-1)) {
+            toChange = mutDF.getValue("Index_" + i)[j];
+            if (isNULL(toChange)) {
+                break;
+            }
+            if (toChange == "") {
+                break;
+            }
+            toChange = asInteger(toChange);
+            newBase = mutDF.getValue("Base_" + i)[j];
+            subpop.haplosomes.addNewDrawnMutation(m1, toChange, subpop, newBase); // TODO: base gets added a single position too forward
+        }
+    }
+    print("2");
+}
+// run to tick 20
+20 late()
 {
-    sim.subpopulations[0].outputVCFSample(5);
+    //sim.subpopulations[0].outputVCFSample(1);
+
 	sim.simulationFinished();
 }
