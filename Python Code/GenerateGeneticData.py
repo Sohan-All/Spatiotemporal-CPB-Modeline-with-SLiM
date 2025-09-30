@@ -230,6 +230,6 @@ def int_to_base(num):
 
     
     
-#create_specifier_matrix(2023, genetic_data="../data/Genetic_Data/CPB_genetic_metadata.csv", output_path="../data/Genetic_Data/specifier_matrix_2023.csv")
-generate_Ref_FASTA_from_genolike(0.95)
-generateMutationLists(2023)
+create_specifier_matrix(2015, genetic_data="../data/Genetic_Data/CPB_genetic_metadata.csv", output_path="../data/Genetic_Data/specifier_matrix_2015.csv")
+#generate_Ref_FASTA_from_genolike(0.95)
+#generateMutationLists(2019)
