@@ -4,7 +4,6 @@ import random
 from math import pi, cos, asin, sqrt
 from sklearn.cluster import KMeans
 import DataWrappers
-import munkres
 
 # Cluster the coordinates using KMeans and add cluster labels to the field data    
 def cluster_coordinates(field_data, n_clusters=5, iters=2000, random_state=random.randint(0, 1000)):

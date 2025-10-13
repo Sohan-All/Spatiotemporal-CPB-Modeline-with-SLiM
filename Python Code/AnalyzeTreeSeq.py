@@ -1,4 +1,5 @@
 import tskit
+import msprime, pyslim
 import pandas as pd
 import math
 
@@ -8,7 +9,7 @@ cluster_data = pd.read_csv("../data/cluster_data.csv")
 
 assignments = cluster_data['Genome Assignment']
 
-total_assignments = int(max(assignments.dropna()))
+total_assignments = int(max(assignments.dropna())) 
 
 genome_indicies = [-1] * (total_assignments+1)
 
@@ -20,6 +21,8 @@ for i in range(len(assignments)):
 
 # Load the tree sequence file
 ts = tskit.load("../out/simTreeSeq.trees")
+
+ts = pyslim.recapitate(ts, recombination_rate=1e-8, ancestral_Ne=6700)
 #ts = ts.simplify(samples=genome_indicies)
 
 
@@ -35,6 +38,9 @@ for idx in genome_indicies:
     pi = ts.diversity([pop_samples])
     diversities.append(pi)
     
+print("Diversity (pi) for each genome assignment:")
+print(diversities)
+    
 divergences = []
 
 for i in range(len(genome_indicies)):
@@ -47,11 +53,8 @@ for i in range(len(genome_indicies)):
         else:
             p1 = ts.samples(population=genome_indicies[i])
             p2 = ts.samples(population=genome_indicies[j])
-            print(p1)
-            print(p2)
-            print(ts.num_sites)
-            fst = ts.Fst([p1, p2])
-            divergences[i].append(fst)
+            divergence = ts.divergence([p1, p2])
+            divergences[i].append(divergence)
 
-for divergence in divergences:
-    print(divergence)
+# for divergence in divergences:
+#     print(divergence)

@@ -25,12 +25,12 @@
 initialize()
 {
     initializeTreeSeq(simplificationRatio=INF, timeUnit="generations");
-    initializeMutationRate(0);
-    initializeMutationType("m2", 0.5, "f", 1.0);
+    initializeMutationRate(1e-7);
+    initializeMutationType("m2", 0.5, "f", 0.1);
     m2.convertToSubstitution = F;
     initializeGenomicElementType("g1", m2, 1);
     initializeGenomicElement(g1, 0, 1e6 - 1);
-    initializeRecombinationRate(3e-10);
+    initializeRecombinationRate(1e-8);
 } 
 
 
@@ -54,7 +54,7 @@ initialize()
     //Find which clusters will be sampled from.
     numGenomes = mutDF.ncol / 2;
     genomeAssignments = integer(asInteger(numGenomes)-1);
-    defineConstant("genomeAssignmentsPtr", genomeAssignments);
+    //defineConstant("genomeAssignmentsPtr", genomeAssignments);
     print(length(genomeAssignments));
 
     for (i in 0:(propDF.nrow-1)) {
@@ -62,6 +62,10 @@ initialize()
             genomeAssignments[asInteger(propDF.getValue("Genome Assignment")[i])] = i;
         }
     }
+
+    print(genomeAssignments);
+
+    defineConstant("genomeAssignmentsPtr", genomeAssignments);
 
 
 
@@ -83,7 +87,7 @@ initialize()
 }
 
 // run to tick 20
-20 late()
+200 late()
 {
     //sim.subpopulations[0].outputVCFSample(1);
     sim.treeSeqOutput("..\\out\\simTreeSeq.trees");

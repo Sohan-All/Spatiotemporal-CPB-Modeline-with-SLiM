@@ -14,7 +14,7 @@ def main():
     field_data = CollectData.read_csv('../data/final_data_for_modeling.csv')
     
     #Create clusters from the field data
-    num_clusters = int(input("Enter the number of clusters (default 50): ").strip() or 50)
+    num_clusters = int(input("Enter the number of clusters (default 99): ").strip() or 99)
     
     #Cluster the coordinates using KMeans
     GenerateClusterData.cluster_coordinates(field_data, n_clusters=num_clusters, iters=2000, random_state=random.randint(0, 1000))
@@ -30,8 +30,11 @@ def main():
     #Save the cluster data to a CSV file
     GenerateClusterData.cluster_data_to_csv(clusters, output_path='../data/cluster_data.csv')
     
+    migration_rates_modifier = int(input("Enter a migration rates modifier (default 10000): ").strip() or 10000)
+    
+    
     #Generate migration rates based on the cluster distance matrix
-    migration_rates = GenerateSimulationParams.determine_migration_rates(distances, modifier=10000, output_path='../data/migration_rates.csv')
+    migration_rates = GenerateSimulationParams.determine_migration_rates(distances, modifier=migration_rates_modifier, output_path='../data/migration_rates.csv')
     
 
     
