@@ -37,8 +37,8 @@ def main():
     #Save the cluster data to a CSV file
     GenerateClusterData.cluster_data_to_csv(clusters, output_path='../data/cluster_data.csv')
     
+    #Query for a migration rates modifier
     migration_rates_modifier = int(input("Enter a migration rates modifier (default 10000): ").strip() or 10000)
-    
     
     #Generate migration rates based on the cluster distance matrix
     migration_rates = GenerateSimulationParams.determine_migration_rates(distances, modifier=migration_rates_modifier, output_path='../data/migration_rates.csv')
@@ -46,6 +46,7 @@ def main():
     #Run the SLiM simulation to create the tree sequence
     subprocess.run(['slim', '../SLiM Code/CPBSampleSim.slim'])
     
+    #Does recapitation and mutation addition, then gets diversity and divergence statistics
     AnalyzeTreeSeq.analyze_tree_sequence()
     
     
