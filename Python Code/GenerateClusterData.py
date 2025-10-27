@@ -43,8 +43,22 @@ def populate_cluster_objects(field_data, estimate_data=True):
             
     return clusters
 
+def assign_genomes_to_clusters(clusters):
+    """
+    This function assigns specific groups of genomes to clusters based on how close the
+    genetic sample was taken to the cluster. It only assigns each genome once.
+    
+    parameters:
+    clusters (list): List of Cluster objects to which genomes will be assigned.
+    genetic_data (str): Path to the genetic data CSV file.
+    """
+    assign_genomes_to_clusters_idv_year(clusters, 2023, specifier_matrix="../data/Genetic_Data/specifier_matrix_2023.csv")
+    assign_genomes_to_clusters_idv_year(clusters, 2019, specifier_matrix="../data/Genetic_Data/specifier_matrix_2019.csv")
+    assign_genomes_to_clusters_idv_year(clusters, 2015, specifier_matrix="../data/Genetic_Data/specifier_matrix_2015.csv")
+    
+    
 
-def assign_genomes_to_clusters(clusters, specifier_matrix="../data/Genetic_Data/specifier_matrix_2023.csv"):
+def assign_genomes_to_clusters_idv_year(clusters, year, specifier_matrix="../data/Genetic_Data/specifier_matrix_2023.csv"):
     """
     This function assigns specific groups of genomes to clusters based on how close the
     genetic sample was taken to the cluster. It only assigns each genome once.
@@ -58,7 +72,9 @@ def assign_genomes_to_clusters(clusters, specifier_matrix="../data/Genetic_Data/
     
     # Extract latitude and longitude pairs from the specifier matrix
     genome_coords = list(zip(specifier.iloc[:, 1], specifier.iloc[:, 2]))
-    
+
+    yearIdx = {2015: 0, 2019: 1, 2023: 2}[year]
+
     for i in range(len(genome_coords)):
         lat, lon = genome_coords[i]
         
@@ -67,13 +83,13 @@ def assign_genomes_to_clusters(clusters, specifier_matrix="../data/Genetic_Data/
         min_distance = float('inf')
 
         for cluster in clusters:
-            if cluster.genome_assignment is not None:
+            if cluster.genome_assignments[yearIdx] is not None:
                 continue
             dist = distance(lat, lon, cluster.latitude, cluster.longitude)
             if dist < min_distance:
                 min_distance = dist
                 closest_cluster = cluster
-        closest_cluster.genome_assignment = i     
+        closest_cluster.genome_assignments[yearIdx] = i     
         
     
     
@@ -126,7 +142,9 @@ def cluster_data_to_csv(clusters, output_path='../data/cluster_data.csv'):
         'Longitude': [],
         'Average Count': [],
         'Average GDD': [],
-        'Genome Assignment': []
+        'Genome Assignment 2015': [],
+        'Genome Assignment 2019': [],
+        'Genome Assignment 2023': []
     }
     
     for cluster in clusters:
@@ -135,10 +153,18 @@ def cluster_data_to_csv(clusters, output_path='../data/cluster_data.csv'):
         data['Longitude'].append(cluster.longitude)
         data['Average Count'].append(cluster.data[0])  # Assuming first element is average count
         data['Average GDD'].append(cluster.data[1])  # Assuming second element is average GDD
-        if cluster.genome_assignment is not None:
-            data['Genome Assignment'].append(cluster.genome_assignment)
+        if cluster.genome_assignments[0] is not None:
+            data['Genome Assignment 2015'].append(cluster.genome_assignments[0])
         else:
-            data['Genome Assignment'].append('')
+            data['Genome Assignment 2015'].append('')
+        if cluster.genome_assignments[1] is not None:
+            data['Genome Assignment 2019'].append(cluster.genome_assignments[1])
+        else:
+            data['Genome Assignment 2019'].append('')
+        if cluster.genome_assignments[2] is not None:
+            data['Genome Assignment 2023'].append(cluster.genome_assignments[2])
+        else:
+            data['Genome Assignment 2023'].append('')
     
     df = pd.DataFrame(data)
     df.to_csv(output_path, index=False)

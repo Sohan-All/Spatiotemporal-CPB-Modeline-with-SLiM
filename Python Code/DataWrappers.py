@@ -27,7 +27,7 @@ class Cluster:
         self.cluster_id = cluster_id
         self.latitude = latitude
         self.longitude = longitude
-        self.genome_assignment = None
+        self.genome_assignments = [None, None, None]
         self.fields = []  # List of Field objects in this cluster
         self.data = [] # List of averaged data for the cluster in the format: (avg_count, avg_gdd)
         

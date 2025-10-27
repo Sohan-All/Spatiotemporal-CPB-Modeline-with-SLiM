@@ -45,29 +45,29 @@ initialize()
     propDF = readCSV("..\\data\\cluster_data.csv", colNames=T, sep=",");
 
     //mutDF = readCSV("..\\data\\Genetic_Data\\mutation_lists.csv", colNames=T, sep=",");
-    defineConstant("mutDF", readCSV("..\\data\\Genetic_Data\\mutation_lists.csv", colNames=T, sep=","));
+    // defineConstant("mutDF", readCSV("..\\data\\Genetic_Data\\mutation_lists.csv", colNames=T, sep=","));
 
-    //Check if any of the csv files are imported as null
-    if (isNULL(mutDF) | isNULL(migrationRatesDF) | isNULL(propDF)) {
-        print("Could not read one of or more of the required CSV files");
-        sim.simulationFinished();
-    }
+    // //Check if any of the csv files are imported as null
+    // if (isNULL(mutDF) | isNULL(migrationRatesDF) | isNULL(propDF)) {
+    //     print("Could not read one of or more of the required CSV files");
+    //     sim.simulationFinished();
+    // }
 
-    //Find which clusters will be sampled from.
-    numGenomes = mutDF.ncol / 2;
-    genomeAssignments = integer(asInteger(numGenomes)-1);
+    // //Find which clusters will be sampled from.
+    // numGenomes = mutDF.ncol / 2;
+    // genomeAssignments = integer(asInteger(numGenomes)-1);
+    // //defineConstant("genomeAssignmentsPtr", genomeAssignments);
+    // print(length(genomeAssignments));
+
+    // for (i in 0:(propDF.nrow-1)) {
+    //     if (propDF.getValue("Genome Assignment")[i] != "") {
+    //         genomeAssignments[asInteger(propDF.getValue("Genome Assignment")[i])] = i;
+    //     }
+    // }
+
+    //print(genomeAssignments);
+
     //defineConstant("genomeAssignmentsPtr", genomeAssignments);
-    print(length(genomeAssignments));
-
-    for (i in 0:(propDF.nrow-1)) {
-        if (propDF.getValue("Genome Assignment")[i] != "") {
-            genomeAssignments[asInteger(propDF.getValue("Genome Assignment")[i])] = i;
-        }
-    }
-
-    print(genomeAssignments);
-
-    defineConstant("genomeAssignmentsPtr", genomeAssignments);
 
 
 
@@ -86,6 +86,19 @@ initialize()
                 sim.subpopulations[i].setMigrationRates(sim.subpopulations[j], migrationRates[i+ncol(migrationRates)*j]);
         }
     }
+    //sim.treeSeqRememberIndividuals(sim.subpopulations.individuals, T);
+
+}
+
+
+184 late()
+{
+    sim.treeSeqRememberIndividuals(sim.subpopulations.individuals, T);
+}
+
+192 late() 
+{
+    sim.treeSeqRememberIndividuals(sim.subpopulations.individuals, T);
 }
 
 // run to tick 20
@@ -94,15 +107,15 @@ initialize()
     //sim.subpopulations[0].outputVCFSample(1);
     sim.treeSeqOutput("..\\out\\simTreeSeq.trees");
 
-    for (i in 0:(length(genomeAssignmentsPtr)-1)) {
-        subpopIndex = genomeAssignmentsPtr[i];
-        if (!isNULL(sim.subpopulations[subpopIndex])) {
-            //pi = sim.subpopulations[subpopIndex].pi();
-            pi = calcPi(sim.subpopulations[subpopIndex].haplosomes);
-            print(pi);
-            //catn("Subpop ", subpopIndex, " nucleotide diversity (pi): ", pi);
-        }
-    }
+    // for (i in 0:(length(genomeAssignmentsPtr)-1)) {
+    //     subpopIndex = genomeAssignmentsPtr[i];
+    //     if (!isNULL(sim.subpopulations[subpopIndex])) {
+    //         //pi = sim.subpopulations[subpopIndex].pi();
+    //         pi = calcPi(sim.subpopulations[subpopIndex].haplosomes);
+    //         print(pi);
+    //         //catn("Subpop ", subpopIndex, " nucleotide diversity (pi): ", pi);
+    //     }
+    // }
 
 	sim.simulationFinished();
 }

@@ -24,16 +24,16 @@ def calculate_diversity_and_divergence(ts, genome_indicies, time, output_diversi
 
     #Calculate diversity for each population in pop_samples
     diversities = []
-    for idx in pop_samples:
-        pi = ts.diversity([pop_samples[idx]])
+    for i in range(len(pop_samples)):
+        pi = ts.diversity([pop_samples[i]])
         diversities.append(pi[0])
     diversities = np.array(diversities)
 
     #Calculate divergence between each pair of populations in pop_samples
     divergences = []
-    for i in range(len(genome_indicies)):
+    for i in range(len(pop_samples)):
         divergences.append([])
-        for j in range(len(genome_indicies)):
+        for j in range(len(pop_samples)):
             if i == j:
                 divergences[i].append(0)
             else:
@@ -62,35 +62,43 @@ def analyze_tree_sequence():
     # Load the cluster_data CSV file
     cluster_data = pd.read_csv("../data/cluster_data.csv")
 
-    assignments = cluster_data['Genome Assignment']
+    assignments_2015 = cluster_data['Genome Assignment 2015']
+    assignments_2019 = cluster_data['Genome Assignment 2019']
+    assignments_2023 = cluster_data['Genome Assignment 2023']
 
-    total_assignments = int(max(assignments.dropna())) 
+    total_assignments_2015 = int(max(assignments_2015.dropna()))
+    total_assignments_2019 = int(max(assignments_2019.dropna()))
+    total_assignments_2023 = int(max(assignments_2023.dropna()))
 
-    genome_indicies = [-1] * (total_assignments+1)
-
-    for i in range(len(assignments)):
-        if math.isnan(assignments[i]) == False:
-            index = int(assignments[i])
-            if genome_indicies[index] == -1:
-                genome_indicies[index] = i
+    genome_indicies_2015 = [-1] * (total_assignments_2015+1)
+    genome_indicies_2019 = [-1] * (total_assignments_2019+1)
+    genome_indicies_2023 = [-1] * (total_assignments_2023+1)
+    
+    
+    for i in range(len(assignments_2015)):
+        if math.isnan(assignments_2015[i]) == False:
+            index = int(assignments_2015[i])
+            if genome_indicies_2015[index] == -1:
+                genome_indicies_2015[index] = i
+    for i in range(len(assignments_2019)):
+        if math.isnan(assignments_2019[i]) == False:
+            index = int(assignments_2019[i])
+            if genome_indicies_2019[index] == -1:
+                genome_indicies_2019[index] = i
+    for i in range(len(assignments_2023)):
+        if math.isnan(assignments_2023[i]) == False:
+            index = int(assignments_2023[i])
+            if genome_indicies_2023[index] == -1:
+                genome_indicies_2023[index] = i
 
     # Load the tree sequence file
     ts = tskit.load("../out/simTreeSeq.trees")
 
 
-    diversities = []
-    for idx in genome_indicies:
-        # Get the sample node for this population
-        pop_samples = ts.samples(population=idx)
-        #calculate diversity and append to list
-        pi = ts.diversity([pop_samples])
-        diversities.append(pi[0])
-    diversities = np.array(diversities)
-
-
     ts = pyslim.recapitate(ts, recombination_rate=1e-8, ancestral_Ne=6700)
     # ts = ts.simplify(samples=genome_indicies)
     next_id = pyslim.next_slim_mutation_id(ts)
+    print("Simulating mutations...")
     ts = msprime.sim_mutations(
             ts,
             rate=1e-8,
@@ -98,20 +106,18 @@ def analyze_tree_sequence():
             keep=True,
     )
 
-
     calculate_diversity_and_divergence(
-        ts, genome_indicies, time=0,
+        ts, genome_indicies_2023, time=0,
         output_diversities_path="../data/Output_Data/diversities_2023.csv",
         output_divergences_path="../data/Output_Data/divergences_2023.csv")
     
     calculate_diversity_and_divergence(
-        ts, genome_indicies, time=8,
+        ts, genome_indicies_2019, time=8,
         output_diversities_path="../data/Output_Data/diversities_2019.csv",
         output_divergences_path="../data/Output_Data/divergences_2019.csv")
     
     calculate_diversity_and_divergence(
-        ts, genome_indicies, time=16,
+        ts, genome_indicies_2015, time=16,
         output_diversities_path="../data/Output_Data/diversities_2015.csv",
         output_divergences_path="../data/Output_Data/divergences_2015.csv")
-        
     
