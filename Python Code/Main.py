@@ -23,7 +23,16 @@ def main():
     num_clusters = int(input("Enter the number of clusters (default 99): ").strip() or 99)
     
     #Query for a migration rates modifier
-    migration_rates_modifier = int(input("Enter a migration rates modifier (default 1000): ").strip() or 1000)
+    migration_rates_modifier = int(input("Enter the migration rates modifier (default 1000): ").strip() or 1000)
+    
+    #Query for mutation rate
+    mutation_rate = float(input("Enter the mutation rate (default 1e-7): ").strip() or 1e-7)
+
+    #Query for recombination rate
+    recombination_rate = float(input("Enter the recombination rate (default 1e-8): ").strip() or 1e-8)
+    
+    #Query for population modifier
+    population_modifier = float(input("Enter the population size modifier (default 100): ").strip() or 100)
     
     #Start by reading the data from final_data_for_modeling.csv
     print("Setting up data for simulations...")
@@ -49,11 +58,11 @@ def main():
     
     #Run the SLiM simulation to create the tree sequence
     print("Running SLiM simulation...")
-    subprocess.run(['slim', '-l', '0', '../SLiM Code/CPBSampleSim.slim'])
+    subprocess.run(['slim', '-l', '0', '-d', f'POPMULT={population_modifier}', '../SLiM Code/CPBSampleSim.slim'])
     
     #Does recapitation and mutation addition, then gets diversity and divergence statistics
     print("Recapitating tree sequence...")
-    AnalyzeTreeSeq.analyze_tree_sequence()
+    AnalyzeTreeSeq.analyze_tree_sequence(mutation_rate=mutation_rate, recombination_rate=recombination_rate)
     print("Successfully generated diversity and divergence statistics from tree sequence.")
     
     
