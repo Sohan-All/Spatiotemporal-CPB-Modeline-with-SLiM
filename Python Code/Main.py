@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 import random
 import matplotlib.pyplot as plt
-from numba import jit, cuda
 
 import DataWrappers
 import CollectData
