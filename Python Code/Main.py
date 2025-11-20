@@ -26,10 +26,10 @@ def main():
     migration_rates_modifier = int(input("Enter the migration rates modifier (default 1000): ").strip() or 1000)
     
     #Query for mutation rate
-    mutation_rate = float(input("Enter the mutation rate (default 1e-7): ").strip() or 1e-7)
+    mutation_rate = 2.1e-9 #float(input("Enter the mutation rate (default 1e-7): ").strip() or 2.1e-9)
 
     #Query for recombination rate
-    recombination_rate = float(input("Enter the recombination rate (default 1e-8): ").strip() or 1e-8)
+    recombination_rate = 2.75e-6 #float(input("Enter the recombination rate (default 1e-8): ").strip() or 2.75e-6)
     
     #Query for population modifier
     population_modifier = float(input("Enter the total population size (default 10000): ").strip() or 10000)

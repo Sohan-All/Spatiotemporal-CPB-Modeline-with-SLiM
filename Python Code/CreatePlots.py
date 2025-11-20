@@ -50,8 +50,10 @@ def try_two_column_coords(spec_df, n_values):
 		# Accept two numeric columns and number of rows matches values
 		numeric_cols = spec_df.select_dtypes(include=[np.number]).columns
 		if len(numeric_cols) >= 2 and spec_df.shape[0] == n_values:
-				x = spec_df[numeric_cols[0]].to_numpy(dtype=float)
-				y = spec_df[numeric_cols[1]].to_numpy(dtype=float)
+				# specifier files are in the order: site, latitude, longitude
+				# we want x=longitude, y=latitude for correct plotting
+				x = spec_df[numeric_cols[1]].to_numpy(dtype=float)
+				y = spec_df[numeric_cols[0]].to_numpy(dtype=float)
 				return x, y
 		return None
 
@@ -88,10 +90,10 @@ def try_matrix_mapping(spec_path, diversities):
 def plot_scatter(x, y, values, outpath, cmap, size, marker):
 		fig, ax = plt.subplots(figsize=(8, 6))
 		sc = ax.scatter(x, y, c=values, cmap=cmap, s=size, marker=marker, edgecolors='none')
-		ax.set_xlabel("X")
-		ax.set_ylabel("Y")
-		ax.set_title("Diversity scatter plot")
-		plt.colorbar(sc, ax=ax, label="Diversity")
+		ax.set_xlabel("Longitude")
+		ax.set_ylabel("Latitude")
+		ax.set_title("Diversities")
+		plt.colorbar(sc, ax=ax, label="Diversity (pi)")
 		plt.tight_layout()
 		fig.savefig(outpath, dpi=300)
 		print(f"Saved scatter plot to {outpath}")
@@ -101,7 +103,7 @@ def plot_grid(grid, outpath, cmap, interpolation):
 		fig, ax = plt.subplots(figsize=(8, 6))
 		im = ax.imshow(grid, origin="lower", cmap=cmap, interpolation=interpolation)
 		ax.set_title("Diversity grid")
-		plt.colorbar(im, ax=ax, label="Diversity")
+		plt.colorbar(im, ax=ax, label="Diversity (pi)")
 		plt.tight_layout()
 		fig.savefig(outpath, dpi=300)
 		print(f"Saved grid plot to {outpath}")
@@ -143,10 +145,11 @@ def main():
 		# As a last resort, if specifier CSV has same number of rows as diversities and at least 2 numeric cols, use first two numeric columns
 		numeric_cols = spec_df.select_dtypes(include=[np.number]).columns
 		if spec_df.shape[0] == diversities.size and len(numeric_cols) >= 2:
-				x = spec_df[numeric_cols[0]].to_numpy(dtype=float)
-				y = spec_df[numeric_cols[1]].to_numpy(dtype=float)
-				plot_scatter(x, y, diversities, args.out, args.cmap, args.size, args.marker)
-				return
+			# Ensure x is longitude and y is latitude
+			x = spec_df[numeric_cols[1]].to_numpy(dtype=float)
+			y = spec_df[numeric_cols[0]].to_numpy(dtype=float)
+			plot_scatter(x, y, diversities, args.out, args.cmap, args.size, args.marker)
+			return
 
 		print("Could not interpret specifier CSV. Expected either:\n"
 					"- a two-column x,y CSV with same number of rows as the diversities file, or\n"
