@@ -67,8 +67,9 @@ def assign_genomes_to_clusters_idv_year(clusters, year, specifier_matrix="../dat
     clusters (list): List of Cluster objects to which genomes will be assigned.
     genetic_data (str): Path to the genetic data CSV file.
     """
-    # Read the genetic data file
-    specifier = pd.read_csv(specifier_matrix)
+    # Read the genetic data file. The specifier CSVs do not include a header row,
+    # so use header=None to avoid pandas treating the first sample as column names
+    specifier = pd.read_csv(specifier_matrix, header=None)
     
     # Extract latitude and longitude pairs from the specifier matrix
     genome_coords = list(zip(specifier.iloc[:, 1], specifier.iloc[:, 2]))

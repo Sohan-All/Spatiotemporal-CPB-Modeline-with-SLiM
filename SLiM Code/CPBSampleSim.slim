@@ -1,27 +1,4 @@
 // set up a simple neutral simulation
-/*initialize()
-{
-
-    initializeSLiMOptions(nucleotideBased=T);
-    defineConstant("L", initializeAncestralNucleotides("..\\data\\Genetic_Data\\refFull.fasta")); 
-    initializeMutationTypeNuc("m1", 0.5, "f", 0.0);
-    initializeGenomicElementType("g1", m1, 1.0, mmJukesCantor(0.0)); //1e-7
-    initializeGenomicElement(g1, 0, L-1); 
-    initializeRecombinationRate(0); //1e-8
-
-    
-	// set the overall mutation rate
-	initializeMutationRate(1e-7);
-	// m1 mutation type: neutral
-	initializeMutationType("m1", 0.5, "f", 0.0);
-	// g1 genomic element type: uses m1 for all mutations
-	initializeGenomicElementType("g1", m1, 1.0);
-	// uniform chromosome of length 100 kb
-	initializeGenomicElement(g1, 0, 99999);
-	// uniform recombination along the chromosome
-	initializeRecombinationRate(1e-8);
-    
-}*/
 initialize()
 {
     initializeTreeSeq(simplificationRatio=INF, timeUnit="generations");
@@ -36,7 +13,6 @@ initialize()
 } 
 
 
-
 1 early()
 {
     // Read in cluster data from CSV files
@@ -44,39 +20,14 @@ initialize()
     
     propDF = readCSV("..\\data\\cluster_data.csv", colNames=T, sep=",");
 
-    //mutDF = readCSV("..\\data\\Genetic_Data\\mutation_lists.csv", colNames=T, sep=",");
-    // defineConstant("mutDF", readCSV("..\\data\\Genetic_Data\\mutation_lists.csv", colNames=T, sep=","));
-
-    // //Check if any of the csv files are imported as null
-    // if (isNULL(mutDF) | isNULL(migrationRatesDF) | isNULL(propDF)) {
-    //     print("Could not read one of or more of the required CSV files");
-    //     sim.simulationFinished();
-    // }
-
-    // //Find which clusters will be sampled from.
-    // numGenomes = mutDF.ncol / 2;
-    // genomeAssignments = integer(asInteger(numGenomes)-1);
-    // //defineConstant("genomeAssignmentsPtr", genomeAssignments);
-    // print(length(genomeAssignments));
-
-    // for (i in 0:(propDF.nrow-1)) {
-    //     if (propDF.getValue("Genome Assignment")[i] != "") {
-    //         genomeAssignments[asInteger(propDF.getValue("Genome Assignment")[i])] = i;
-    //     }
-    // }
-
-    //print(genomeAssignments);
-
-    //defineConstant("genomeAssignmentsPtr", genomeAssignments);
-
-
 
     migrationRates = migrationRatesDF.asMatrix();
 
     // Create each subpopulation based on the amount of clusters specified
     // Sets the population of each supop to the average count of individuals in that cluster times a multiplier
+    numSubpops = propDF.nrow;
     for (i in 0:(propDF.nrow-1)) {
-        sim.addSubpop("p"+i, asInteger(propDF.getValue("Average Count")[i] * POPMULT));
+        sim.addSubpop("p"+i, asInteger(propDF.getValue("Average Count")[i] * POPMULT / numSubpops));
     }
 
     // Set the migration rates for each subpopulation pair based on the migration rates matrix
@@ -104,18 +55,7 @@ initialize()
 // run to tick 20
 200 late()
 {
-    //sim.subpopulations[0].outputVCFSample(1);
     sim.treeSeqOutput("..\\out\\simTreeSeq.trees");
-
-    // for (i in 0:(length(genomeAssignmentsPtr)-1)) {
-    //     subpopIndex = genomeAssignmentsPtr[i];
-    //     if (!isNULL(sim.subpopulations[subpopIndex])) {
-    //         //pi = sim.subpopulations[subpopIndex].pi();
-    //         pi = calcPi(sim.subpopulations[subpopIndex].haplosomes);
-    //         print(pi);
-    //         //catn("Subpop ", subpopIndex, " nucleotide diversity (pi): ", pi);
-    //     }
-    // }
 
 	sim.simulationFinished();
 }

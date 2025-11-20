@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import random
 import matplotlib.pyplot as plt
+from numba import jit, cuda
 
 import DataWrappers
 import CollectData
@@ -32,7 +33,7 @@ def main():
     recombination_rate = float(input("Enter the recombination rate (default 1e-8): ").strip() or 1e-8)
     
     #Query for population modifier
-    population_modifier = float(input("Enter the population size modifier (default 100): ").strip() or 100)
+    population_modifier = float(input("Enter the total population size (default 10000): ").strip() or 10000)
     
     #Start by reading the data from final_data_for_modeling.csv
     print("Setting up data for simulations...")
