@@ -1,6 +1,7 @@
 import datetime
+import argparse
 
-def generate_VCF_from_beagle(beagleFilepath="../../../Data for modeling/cpbWGS_genolike_chr9.cpbWGS_genolike_chr9.beagle.gz.phased", outputVCFpath="../data/Genetic_Data/chr9CPB.vcf"):
+def generate_VCF_from_beagle(beagleFilepath, outputVCFpath):
     """
     Generate a vcf file from beagle genetic data.
     This function reads the genetic data and creates a VCF file.
@@ -20,18 +21,15 @@ def generate_VCF_from_beagle(beagleFilepath="../../../Data for modeling/cpbWGS_g
     
     with open(beagleFilepath, 'r') as fin:
         with open(outputVCFpath, "w") as fout:
-        
-            # skip the first/header line
-            next(fin, None)
             # write the VCF header
             num_samples = (len(fin.readline().strip().split()) - 2) // 2
             fout.write(generate_VCF_header(num_samples))
             
-            counter = 0
+            # counter = 0
             for line in fin:
-                counter += 1
-                if counter > CUTOFF:
-                    break
+                # counter += 1
+                # if counter > CUTOFF:
+                #     break
                 parts = line.strip().split()
                 
                 CHROM = 9
@@ -96,3 +94,9 @@ def generate_VCF_header(num_samples):
     header += "\n"
     return header
             
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Convert Beagle file to VCF")
+    parser.add_argument("input", help="Path to beagle file")
+    parser.add_argument("output", help="Path to output VCF file")
+    args = parser.parse_args()
+    generate_VCF_from_beagle(args.input, args.output)
