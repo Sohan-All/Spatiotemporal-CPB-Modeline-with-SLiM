@@ -16,9 +16,7 @@ def generate_VCF_from_beagle(beagleFilepath, outputVCFpath):
     CUTOFF = 10000
     base_map = {'0': 'A', '1': 'C', '2': 'G', '3': 'T'}
     
-    
-    print("started creating vcf")
-    
+        
     with open(beagleFilepath, 'r') as fin:
         with open(outputVCFpath, "w") as fout:
             # write the VCF header
@@ -69,9 +67,7 @@ def generate_VCF_from_beagle(beagleFilepath, outputVCFpath):
                     samples.append(strToAdd)
                     
                 fout.write(f"{CHROM}\t{POS}\t{ID}\t{REF}\t{ALT}\t{QUAL}\t{FILTER}\t{INFO}\t{FORMAT}\t" + "\t".join(samples) + "\n")
-                        
-    print("finished creating vcf")
-    
+                
     
 def generate_VCF_header(num_samples):
     """
@@ -83,8 +79,8 @@ def generate_VCF_header(num_samples):
     Returns:
     str: The VCF header as a string.
     """
-    header = "##fileformat=VCFv4.5\n"
-    header += f"##datecreated={datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")}\n"
+    header = "##fileformat=VCFv4.0\n"
+    header += f"##datecreated={datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')}\n"
     header += "##source=ConvertBeagleToFasta.py\n"
     header += "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT"
     
