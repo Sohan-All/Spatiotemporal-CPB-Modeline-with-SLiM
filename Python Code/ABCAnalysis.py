@@ -7,19 +7,27 @@ import numpy as np
 
 import pyabc
 
+from pyabc.transition import MultivariateNormalTransition
+
 import Main
 
 pyabc.settings.set_figure_params('pyabc')  # for beautified plots
 
 
 #should be a 
-migrationRatePrior = pyabc.Distribution(mu=pyabc.RV("uniform", 0, 5))
+# migrationRatePrior = pyabc.Distribution(mu=pyabc.RV("uniform", 0, 5))
 
 
-populationSizePrior = pyabc.Distribution(mu=pyabc.RV("randint", 1000, 20000))
+# populationSizePrior = pyabc.Distribution(mu=pyabc.RV("randint", 1000, 20000))
 
-#should be 33, 66, or 99
-numClustersPrior = pyabc.Distribution(mu=pyabc.RV("randint", 5, 150))
+# #should be 33, 66, or 99
+# numClustersPrior = pyabc.Distribution(mu=pyabc.RV("randint", 5, 150))
+
+prior = pyabc.Distribution(
+    m=pyabc.RV("lognorm", np.log(0.0001), 1.5),
+    pop=pyabc.RV("expon", loc=2000, scale=50000),
+    numClusters=pyabc.RV("randint", 1, 3)
+)
 
 
 
@@ -37,7 +45,7 @@ def model(parameter):
     #Get the parameters
     m = parameter["m"]
     pop = parameter["pop"]
-    numClusters = parameter["numClusters"]
+    numClusters = parameter["numClusters"] * 33  #scale to 33, 66, or 99
     
     #Run the model
     Main.main(num_clusters=numClusters, migration_rates_modifier=m, population_modifier=pop, silent=True)
@@ -63,13 +71,13 @@ def model(parameter):
             for row in reader:
                 if not row:
                     continue
-            row_vals = []
-            for val in row:
-                v = val.strip()
-                if v == "":
-                    row_vals.append(np.nan)
-                else:
-                    row_vals.append(float(v))
+                row_vals = []
+                for val in row:
+                    v = val.strip()
+                    if v == "":
+                        row_vals.append(np.nan)
+                    else:
+                        row_vals.append(float(v))
             matrix.append(row_vals)
             divergences = np.array(matrix, dtype=float)
             outDict[year]["divergences"] = divergences
@@ -95,16 +103,31 @@ def distance(x, x0):
     '''
     total_distance = 0
     
-    for i, year in enumerate(["2015", "2019", "2023"]):    
+    for year in ["2015", "2019", "2023"]:    
         # Pi distance
-        for j in range(len(x[year]["diversities"])):
-            pi_distance = abs(x[year]["diversities"][j] - x0[year]["diversities"][j]) * len(x[year]["diversities"])
+        for i in range(len(x[year]["diversities"])):
+            pi_distance = abs(x[year]["diversities"][i] - x0[year]["diversities"][i])
+            pi_distance *= len(x[year]["diversities"]) #weight pi distance equally to fst distance
             total_distance += pi_distance
         # Fst distance
-        for j in range(len(x[year]["divergences"])):
+        for i in range(len(x[year]["divergences"])):
             for k in range(len(x[year]["divergences"])):
-                if j != k:
-                    fst_distance = abs(x[year]["divergences"][j][k] - x0[year]["divergences"][j][k])
+                if i != k:
+                    fst_distance = abs(x[year]["divergences"][i][k] - x0[year]["divergences"][i][k])
                     total_distance += fst_distance
                     
     return total_distance
+
+
+
+abc = pyabc.ABCSMC(model, prior, distance, population_size=500, transitions=MultivariateNormalTransition())
+
+db_path = os.path.join(tempfile.gettempdir(), "test.db")
+observation = {"singlesChosen": 7}
+abc.new("sqlite:///" + db_path, observation)
+
+history = abc.run(minimum_epsilon=2, max_nr_populations=5)
+
+df, w = history.get_distribution()
+posterior_mean = (df * w[:, None]).sum()
+print("Posterior mean:", posterior_mean)

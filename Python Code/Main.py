@@ -68,7 +68,7 @@ if __name__ == "__main__":
     num_clusters = int(input("Enter the number of clusters (default 99): ").strip() or 99)
     
     #Query for a migration rates modifier
-    migration_rates_modifier = int(input("Enter the migration rates modifier (default 1000): ").strip() or 1000)
+    migration_rates_modifier = float(input("Enter the migration rates modifier (default 0.0001): ").strip() or 0.0001)
     
     #Query for population modifier
     population_modifier = float(input("Enter the total population size (default 10000): ").strip() or 10000)
