@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import tskit
 import msprime, pyslim
 import pandas as pd
@@ -60,7 +62,7 @@ def analyze_tree_sequence(mutation_rate=1e-7, recombination_rate=1e-8):
     '''
     
     # Load the cluster_data CSV file
-    cluster_data = pd.read_csv("../data/cluster_data.csv")
+    cluster_data = pd.read_csv(Path("../data/cluster_data.csv"))
 
     assignments_2015 = cluster_data['Genome Assignment 2015']
     assignments_2019 = cluster_data['Genome Assignment 2019']
@@ -92,7 +94,7 @@ def analyze_tree_sequence(mutation_rate=1e-7, recombination_rate=1e-8):
                 genome_indicies_2023[index] = i
 
     # Load the tree sequence file
-    ts = tskit.load("../out/simTreeSeq.trees")
+    ts = tskit.load(Path("../out/simTreeSeq.trees"))
 
 
     ts = pyslim.recapitate(ts, recombination_rate=recombination_rate, ancestral_Ne=6700)
@@ -108,16 +110,16 @@ def analyze_tree_sequence(mutation_rate=1e-7, recombination_rate=1e-8):
 
     calculate_diversity_and_divergence(
         ts, genome_indicies_2023, time=0,
-        output_diversities_path="../data/Output_Data/diversities_2023.csv",
-        output_divergences_path="../data/Output_Data/divergences_2023.csv")
+        output_diversities_path=Path("../data/Output_Data/diversities_2023.csv"),
+        output_divergences_path=Path("../data/Output_Data/divergences_2023.csv"))
     
     calculate_diversity_and_divergence(
         ts, genome_indicies_2019, time=8,
-        output_diversities_path="../data/Output_Data/diversities_2019.csv",
-        output_divergences_path="../data/Output_Data/divergences_2019.csv")
+        output_diversities_path=Path("../data/Output_Data/diversities_2019.csv"),
+        output_divergences_path=Path("../data/Output_Data/divergences_2019.csv"))
     
     calculate_diversity_and_divergence(
         ts, genome_indicies_2015, time=16,
-        output_diversities_path="../data/Output_Data/diversities_2015.csv",
-        output_divergences_path="../data/Output_Data/divergences_2015.csv")
+        output_diversities_path=Path("../data/Output_Data/diversities_2015.csv"),
+        output_divergences_path=Path("../data/Output_Data/divergences_2015.csv"))
     

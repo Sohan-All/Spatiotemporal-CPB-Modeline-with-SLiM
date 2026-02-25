@@ -1,6 +1,7 @@
 import sys
 from collections import Counter
 import os
+from pathlib import Path
 
 def generate_markers_file(beagle_path, output_markers_path):
     """
@@ -136,9 +137,9 @@ def generate_markers_file(beagle_path, output_markers_path):
 # Also, ensure you are running a Java version 8 runtime environment if using Beagle 5.5 [11].
 
 # 1. Path to your compressed Beagle input file (e.g., genolike.beagle.gz)
-input_file = "../../../Data for modeling/cpbWGS_genolike_chr9.cpbWGS_genolike_chr9.beagle.gz.phased"
+input_file = Path("../../../Data for modeling/cpbWGS_genolike_chr9.cpbWGS_genolike_chr9.beagle.gz.phased")
 
 # 2. Desired output path for the markers file (e.g., markers.txt)
-output_file = "../../../Genome Manipulation/markers.txt"
+output_file = Path("../../../Genome Manipulation/markers.txt")
 
 generate_markers_file(input_file, output_file)

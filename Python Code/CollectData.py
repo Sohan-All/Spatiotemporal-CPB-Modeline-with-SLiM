@@ -5,11 +5,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 import random
-
+from pathlib import Path
 import DataWrappers
 
 # Read the CSV file and extract important information into a dictionary
-def read_csv(csv_file_path='../data/final_data_for_modeling.csv'):
+def read_csv(csv_file_path=Path('../data/final_data_for_modeling.csv')):
     # Dictionary to store field objects for each unique field_fvid
     field_data = dict()
 
@@ -77,12 +77,12 @@ def create_distance_matrix(field_data, cutoff=10000):
             if (dist <= cutoff): # Only store distances less than or equal to cutoff
                 grid[i+1][j+1] = dist
 
-    np.savetxt('./data/distances.csv', grid, delimiter = ",", fmt='%i')
+    np.savetxt(Path("../data/distances.csv"), grid, delimiter = ",", fmt='%i')
 
 
 
 # Plotting the coordinates using matplotlib to visualize the field locations
-def plot_coordinates(field_data, output_path='../out/field_locations.png'):
+def plot_coordinates(field_data, output_path=Path('../out/field_locations.png')):
     # Prepare data for plotting
     plot_data = {'Latitude': [], 'Longitude': [], 'Cluster': []}
     for field in field_data.values():
@@ -112,7 +112,7 @@ def plot_coordinates(field_data, output_path='../out/field_locations.png'):
 
 
 # This function takes a list of clusters and plots their coordinates on a scatter plot, saving the plot to a PNG file
-def plot_cluster_coordinates(clusters, output_path='../out/cluster_field_locations.png'):
+def plot_cluster_coordinates(clusters, output_path=Path('../out/cluster_field_locations.png')):
     # Prepare data for plotting
     plot_data = {'Latitude': [], 'Longitude': [], 'Cluster ID': []}
     for cluster in clusters:
@@ -135,7 +135,7 @@ def plot_cluster_coordinates(clusters, output_path='../out/cluster_field_locatio
 
     
 
-# field_data = read_csv('./data/final_data_for_modeling.csv')
+# field_data = read_csv(Path('../data/final_data_for_modeling.csv'))
 # #create_distance_matrix(field_data, cutoff=CUTOFF)
 # num_clusters = int(input("Enter the number of clusters (default 50): ").strip() or 50)
 # cluster_coordinates(field_data, n_clusters=num_clusters, iters=2000, random_state=random.randint(0, 1000))

@@ -5,6 +5,8 @@ import tempfile
 import matplotlib.pyplot as plt
 import numpy as np
 
+from pathlib import Path
+
 import pyabc
 
 from pyabc.transition import MultivariateNormalTransition
@@ -45,7 +47,7 @@ def model(parameter):
     outDict = {"2015": {}, "2019": {}, "2023": {}}
     
     for year in ["2015", "2019", "2023"]:
-        with open(f"..\\data\\Output_data\\diversities_{year}.csv", mode='r', newline='', encoding='utf-8') as csvfile:
+        with open(Path(f"..\\data\\Output_data\\diversities_{year}.csv"), mode='r', newline='', encoding='utf-8') as csvfile:
             div2015 = csv.DictReader(csvfile)
             diversities_list = []
             for row in div2015:
@@ -55,7 +57,7 @@ def model(parameter):
             diversities = np.array(diversities_list)
             outDict[year]["diversities"] = diversities
         
-        with open(f"..\\data\\Output_data\\divergences_{year}.csv", mode='r', newline='', encoding='utf-8') as csvfile:
+        with open(Path(f"..\\data\\Output_data\\divergences_{year}.csv"), mode='r', newline='', encoding='utf-8') as csvfile:
             reader = csv.reader(csvfile)
             matrix = []
             for row in reader:
@@ -82,10 +84,10 @@ def distance(x, x0):
     Distance function for comparing simulated and observed data.
     x is observed, x0 is simulated.
     Pi is nucleotide diversity given in the form of a list of values for each population.
-    Fst is genetic differentiation given in the form of a matrix of values between populations.
+    dxy is genetic differentiation given in the form of a matrix of values between populations.
     
     x should be a dictionary with keys "2015", "2019", "2023". Each of these keys has values: "diversities" and "divergences"
-    which are the pi and fst values in list and matrix form, respectively.
+    which are the pi and dxy values in list and matrix form, respectively.
     
     Each of these values is an array of three of these values, one for each year (2015, 2019, 2023).
     
@@ -108,12 +110,49 @@ def distance(x, x0):
                     
     return total_distance
 
+def getObservedData():
+    outDict = {"2015": {}, "2019": {}, "2023": {}}
+    
+    for year in ["2015", "2019", "2023"]:
+        with open(Path(f"..\\data\\empiricalStats\\averaged_pi_{year}.csv"), mode='r', newline='', encoding='utf-8') as csvfile:
+            div2015 = csv.DictReader(csvfile)
+            diversities_list = []
+            for row in div2015:
+                value = next(iter(row.values()))
+                if value is not None and value.strip() != "":
+                    diversities_list.append(float(value.strip()))
+            diversities = np.array(diversities_list)
+            outDict[year]["diversities"] = diversities
+        
+        with open(Path(f"..\\data\\empiricalStats\\averaged_dxy_{year}.csv"), mode='r', newline='', encoding='utf-8') as csvfile:
+            reader = csv.reader(csvfile)
+            matrix = []
+            for row in reader:
+                if not row:
+                    continue
+                row_vals = []
+                for val in row:
+                    v = val.strip()
+                    if v == "":
+                        row_vals.append(np.nan)
+                    else:
+                        row_vals.append(float(v))
+            matrix.append(row_vals)
+            divergences = np.array(matrix, dtype=float)
+            outDict[year]["divergences"] = divergences
+            
+    return outDict
+    
+
+
 
 
 abc = pyabc.ABCSMC(model, prior, distance, population_size=500, transitions=MultivariateNormalTransition())
 
 db_path = os.path.join(tempfile.gettempdir(), "test.db")
-observation = {"singlesChosen": 7}
+
+observation = getObservedData()
+    
 abc.new("sqlite:///" + db_path, observation)
 
 history = abc.run(minimum_epsilon=2, max_nr_populations=5)

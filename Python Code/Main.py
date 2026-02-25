@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import random
 import matplotlib.pyplot as plt
+from pathlib import Path
 
 import DataWrappers
 import CollectData
@@ -28,7 +29,7 @@ def main(num_clusters, migration_rates_modifier, population_modifier, silent=Fal
     #Start by reading the data from final_data_for_modeling.csv
     if not silent:
         print("Setting up data for simulations...")
-    field_data = CollectData.read_csv('../data/final_data_for_modeling.csv')
+    field_data = CollectData.read_csv(Path('../data/final_data_for_modeling.csv'))
     
     #Cluster the coordinates using KMeans
     GenerateClusterData.cluster_coordinates(field_data, n_clusters=num_clusters, iters=2000, random_state=random.randint(0, 1000))
@@ -40,18 +41,18 @@ def main(num_clusters, migration_rates_modifier, population_modifier, silent=Fal
     GenerateClusterData.assign_genomes_to_clusters(clusters)
     
     #Generate a distance matrix for the clusters
-    distances = GenerateClusterData.create_cluster_distance_matrix(clusters, output_path='../data/cluster_distances.csv')   
+    distances = GenerateClusterData.create_cluster_distance_matrix(clusters, output_path=Path('../data/cluster_distances.csv'))   
      
     #Save the cluster data to a CSV file
-    GenerateClusterData.cluster_data_to_csv(clusters, output_path='../data/cluster_data.csv')
+    GenerateClusterData.cluster_data_to_csv(clusters, output_path=Path('../data/cluster_data.csv'))
         
     #Generate migration rates based on the cluster distance matrix
-    GenerateSimulationParams.determine_migration_rates(distances, modifier=migration_rates_modifier, output_path='../data/migration_rates.csv')
+    GenerateSimulationParams.determine_migration_rates(distances, modifier=migration_rates_modifier, output_path=Path('../data/migration_rates.csv'))
     
     #Run the SLiM simulation to create the tree sequence
     if not silent:
         print("Running SLiM simulation...")
-    subprocess.run(['slim', '-l', '0', '-d', f'POPMULT={population_modifier}', '../SLiM Code/CPBSampleSim.slim'])
+    subprocess.run(['slim', '-l', '0', '-d', f'POPMULT={population_modifier}', Path('../SLiM Code/CPBSampleSim.slim')])
     
     #Does recapitation and mutation addition, then gets diversity and divergence statistics
     if not silent:

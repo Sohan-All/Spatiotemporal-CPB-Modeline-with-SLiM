@@ -1,3 +1,4 @@
+from pathlib import Path
 import numpy as np
 import pandas as pd
 import random
@@ -52,13 +53,13 @@ def assign_genomes_to_clusters(clusters):
     clusters (list): List of Cluster objects to which genomes will be assigned.
     genetic_data (str): Path to the genetic data CSV file.
     """
-    assign_genomes_to_clusters_idv_year(clusters, 2023, specifier_matrix="../data/Genetic_Data/specifier_matrix_2023.csv")
-    assign_genomes_to_clusters_idv_year(clusters, 2019, specifier_matrix="../data/Genetic_Data/specifier_matrix_2019.csv")
-    assign_genomes_to_clusters_idv_year(clusters, 2015, specifier_matrix="../data/Genetic_Data/specifier_matrix_2015.csv")
+    assign_genomes_to_clusters_idv_year(clusters, 2023, specifier_matrix=Path("../data/Genetic_Data/specifier_matrix_2023.csv"))
+    assign_genomes_to_clusters_idv_year(clusters, 2019, specifier_matrix=Path("../data/Genetic_Data/specifier_matrix_2019.csv"))
+    assign_genomes_to_clusters_idv_year(clusters, 2015, specifier_matrix=Path("../data/Genetic_Data/specifier_matrix_2015.csv"))
     
     
 
-def assign_genomes_to_clusters_idv_year(clusters, year, specifier_matrix="../data/Genetic_Data/specifier_matrix_2023.csv"):
+def assign_genomes_to_clusters_idv_year(clusters, year, specifier_matrix=Path("../data/Genetic_Data/specifier_matrix_2023.csv")):
     """
     This function assigns specific groups of genomes to clusters based on how close the
     genetic sample was taken to the cluster. It only assigns each genome once.
@@ -109,7 +110,7 @@ def distance(lat1, lon1, lat2, lon2):
 
 # This function takes a list of clusters and calculates the distance between each pair of clusters, storing the results in a distance matrix 
 #The csv file is outputted to the specified path and returned by the function.
-def create_cluster_distance_matrix(clusters, output_path='../data/cluster_distances.csv'):
+def create_cluster_distance_matrix(clusters, output_path=Path("../data/cluster_distances.csv")):
 
     # Create a distance matrix with cluster IDs as both row and column headers
     grid = np.eye(len(clusters) + 1, dtype=int)
@@ -135,7 +136,7 @@ def create_cluster_distance_matrix(clusters, output_path='../data/cluster_distan
 
 
 # This function takes a list of cluster objects and saves their data to a CSV file
-def cluster_data_to_csv(clusters, output_path='../data/cluster_data.csv'):
+def cluster_data_to_csv(clusters, output_path=Path('../data/cluster_data.csv')):
     # Create a DataFrame to hold the cluster data
     data = {
         'Cluster ID': [],

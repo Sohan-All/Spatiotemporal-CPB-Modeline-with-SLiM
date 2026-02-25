@@ -1,15 +1,16 @@
 import pandas as pd
 from collections import Counter
 import csv
+from pathlib import Path
 
 CUTOFF = 10000
 
-def create_specifier_matrixes(genetic_data="../data/Genetic_Data/CPB_genetic_metadata.csv"):
+def create_specifier_matrixes(genetic_data=Path("../data/Genetic_Data/CPB_genetic_metadata.csv")):
     for year in (2023, 2019, 2015):
-        create_specifier_matrix(year, genetic_data="../data/Genetic_Data/CPB_genetic_metadata.csv",
-                                output_path=f"../data/Genetic_Data/specifier_matrix_{year}.csv")
+        create_specifier_matrix(year, genetic_data=genetic_data,
+                                output_path=Path(f"../data/Genetic_Data/specifier_matrix_{year}.csv"))
 
-def create_specifier_matrix(year, genetic_data="../data/Genetic_Data/CPB_genetic_metadata.csv", output_path="../data/Genetic_Data/specifier_matrix.csv"):
+def create_specifier_matrix(year, genetic_data=Path("../data/Genetic_Data/CPB_genetic_metadata.csv"), output_path=Path("../data/Genetic_Data/specifier_matrix.csv")):
     """
     Create a specifier matrix for the given year from genetic data. 
     This matrix will have rows with population names, latitude, longitude, and indices of genetic data.
@@ -43,7 +44,7 @@ def create_specifier_matrix(year, genetic_data="../data/Genetic_Data/CPB_genetic
     specifier_df.to_csv(output_path, index=False, header=False)
 
 #DEPRECIATED
-def generate_Ref_FASTA_from_genolike(cutoff, filePath="../../../Data for modeling/cpbWGS_genolike_chr9.cpbWGS_genolike_chr9.beagle.gz.phased", output_path_fasta="../data/Genetic_Data/refFull.fasta", output_path_ids="../data/Genetic_Data/FastaIDs.csv"):
+def generate_Ref_FASTA_from_genolike(cutoff, filePath=Path("../../../Data for modeling/cpbWGS_genolike_chr9.cpbWGS_genolike_chr9.beagle.gz.phased"), output_path_fasta=Path("../data/Genetic_Data/refFull.fasta"), output_path_ids=Path("../data/Genetic_Data/FastaIDs.csv")):
     """
     Generate a reference FASTA file from genetic data.
     This function reads the genetic data and creates a FASTA file.
@@ -110,11 +111,11 @@ def generate_Ref_FASTA_from_genolike(cutoff, filePath="../../../Data for modelin
 #for each relevant individual that was sequenced in that year.
 
 #DEPRECIATED
-def generateMutationLists(year, specifier_matrix="../data/Genetic_Data/specifier_matrix_2023.csv", 
-                          genetic_data="../../../Data for modeling/cpbWGS_genolike_chr9.cpbWGS_genolike_chr9.beagle.gz.phased",
-                          ref_fasta="../data/Genetic_Data/refFull.fasta", 
-                          fasta_ids="../data/Genetic_Data/FastaIDs.csv",
-                          output_path="../data/Genetic_Data/mutation_lists.csv"):
+def generateMutationLists(year, specifier_matrix=Path("../data/Genetic_Data/specifier_matrix_2023.csv"), 
+                          genetic_data=Path("../../../Data for modeling/cpbWGS_genolike_chr9.cpbWGS_genolike_chr9.beagle.gz.phased"),
+                          ref_fasta=Path("../data/Genetic_Data/refFull.fasta"), 
+                          fasta_ids=Path("../data/Genetic_Data/FastaIDs.csv"),
+                          output_path=Path("../data/Genetic_Data/mutation_lists.csv")):
     '''
     Generate mutation lists for each group of individuals in the same location in the specified year.
     This function reads the reference FASTA file, the specifier matrix, and the genetic data file,
@@ -232,6 +233,6 @@ def int_to_base(num):
 
     
     
-create_specifier_matrixes(genetic_data="../data/Genetic_Data/CPB_genetic_metadata.csv")
+create_specifier_matrixes(genetic_data=Path("../data/Genetic_Data/CPB_genetic_metadata.csv"))
 #generate_Ref_FASTA_from_genolike(0.95)
 #generateMutationLists(2019)
