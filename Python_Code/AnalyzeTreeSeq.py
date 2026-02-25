@@ -95,10 +95,23 @@ def analyze_tree_sequence(mutation_rate=1e-7, recombination_rate=1e-8):
 
     # Load the tree sequence file
     ts = tskit.load(Path("../out/simTreeSeq.trees"))
-
+    
 
     ts = pyslim.recapitate(ts, recombination_rate=recombination_rate, ancestral_Ne=6700)
-    # ts = ts.simplify(samples=genome_indicies)
+    
+    
+    print("Simplifying tree sequence...")
+    samplesToKeep = []
+    for idx in genome_indicies_2015:
+        samplesToKeep.extend(ts.samples(population=idx, time=16))
+    for idx in genome_indicies_2019:
+        samplesToKeep.extend(ts.samples(population=idx, time=8))
+    for idx in genome_indicies_2023:
+        samplesToKeep.extend(ts.samples(population=idx, time=0))
+    
+    
+    ts = ts.simplify(samples=samplesToKeep)
+    
     next_id = pyslim.next_slim_mutation_id(ts)
     print("Simulating mutations...")
     ts = msprime.sim_mutations(

@@ -20,7 +20,6 @@ def determine_migration_rates(distances, modifier=0.0001, output_path=Path('../d
             migration_rates[i][j] /= total_rate
         
     # Save the migration rates to a CSV file
-    if output_path.lower() != 'none':
-        np.savetxt(output_path, migration_rates, delimiter=",", fmt='%.6f')
+    np.savetxt(output_path, migration_rates, delimiter=",", fmt='%.6f')
     return migration_rates
 
