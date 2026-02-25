@@ -13,16 +13,6 @@ import Main
 
 pyabc.settings.set_figure_params('pyabc')  # for beautified plots
 
-
-#should be a 
-# migrationRatePrior = pyabc.Distribution(mu=pyabc.RV("uniform", 0, 5))
-
-
-# populationSizePrior = pyabc.Distribution(mu=pyabc.RV("randint", 1000, 20000))
-
-# #should be 33, 66, or 99
-# numClustersPrior = pyabc.Distribution(mu=pyabc.RV("randint", 5, 150))
-
 prior = pyabc.Distribution(
     m=pyabc.RV("lognorm", np.log(0.0001), 1.5),
     pop=pyabc.RV("expon", loc=2000, scale=50000),
@@ -127,7 +117,9 @@ observation = {"singlesChosen": 7}
 abc.new("sqlite:///" + db_path, observation)
 
 history = abc.run(minimum_epsilon=2, max_nr_populations=5)
+df, weights = history.get_distribution()
+df.to_csv("posterior_samples.csv", index=False)
 
-df, w = history.get_distribution()
-posterior_mean = (df * w[:, None]).sum()
-print("Posterior mean:", posterior_mean)
+# df, w = history.get_distribution()
+# posterior_mean = (df * w[:, None]).sum()
+# print("Posterior mean:", posterior_mean)

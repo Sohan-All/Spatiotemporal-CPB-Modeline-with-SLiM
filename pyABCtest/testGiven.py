@@ -21,10 +21,13 @@ def distance(x, x0):
 abc = pyabc.ABCSMC(model, prior, distance, population_size=1000)
 
 
-db_path = os.path.join(tempfile.gettempdir(), "test.db")
+# db_path = os.path.join(tempfile.gettempdir(), "test.db")
+db_path = "testGiven.db"
 observation = 2.5
 abc.new("sqlite:///" + db_path, {"data": observation})
 
 
 history = abc.run(minimum_epsilon=0.1, max_nr_populations=10)
+df, weights = history.get_distribution()
+df.to_csv("posterior_samples.csv", index=False)
 print(history)

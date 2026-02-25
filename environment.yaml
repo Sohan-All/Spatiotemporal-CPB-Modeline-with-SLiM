@@ -1,0 +1,10 @@
+name: msprime-env
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - msprime
+  - numpy
+  - scipy
+  - numba
+prefix: C:\Users\sohan\miniconda3\envs\msprime-env
