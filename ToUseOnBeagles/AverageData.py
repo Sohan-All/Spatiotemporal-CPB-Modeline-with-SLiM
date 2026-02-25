@@ -22,12 +22,9 @@ def main():
         
         for i in range(1, numChrs + 1): 
             folderName = f"statsChr{i}_{year}"
-            piFileName = os.path.join(folderName, f"chr{i}_{year}_pi.txt")
-            dxyFileName = os.path.join(folderName, f"chr{i}_{year}_dxy.txt")
-            fstFileName = os.path.join(folderName, f"chr{i}_{year}_fst.txt")
-            piPath = os.path.join(folderName, piFileName)
-            dxyPath = os.path.join(folderName, dxyFileName)
-            fstPath = os.path.join(folderName, fstFileName)
+            piPath = os.path.join(folderName, f"chr{i}_{year}_pi.txt")
+            dxyPath = os.path.join(folderName, f"chr{i}_{year}_dxy.txt")
+            fstPath = os.path.join(folderName, f"chr{i}_{year}_fst.txt")
             
             
             with open(piPath, 'r') as f:
@@ -63,8 +60,8 @@ def main():
             
         
         averagedPis = [sum(piData[i])/len(piData[i]) for i in range(numSites)]
-        averagedDxy = [[sum(dxyData[i][k])/len(dxyData[i][k]) for k in range(numSites)] for i in range(numSites)]
-        averagedFst = [[sum(fstData[i][k])/len(fstData[i][k]) for k in range(numSites)] for i in range(numSites)]
+        averagedDxy = [[0 if k == i else sum(dxyData[i][k])/len(dxyData[i][k]) for k in range(numSites)] for i in range(numSites)]
+        averagedFst = [[0 if k == i else sum(fstData[i][k])/len(fstData[i][k]) for k in range(numSites)] for i in range(numSites)]
         
         with open(f"finalStats/averaged_pi_{year}.csv", 'w') as f:
             for site, pi in zip(siteNames, averagedPis):
@@ -83,5 +80,7 @@ def main():
                 for k in range(numSites):
                     line += f"{averagedFst[i][k]},"
                 f.write(line[:-1] + "\n")
-        
-        
+                
+                
+if __name__ == "__main__":
+    main()
