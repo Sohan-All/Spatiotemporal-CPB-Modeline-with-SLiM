@@ -52,7 +52,7 @@ def main(num_clusters, migration_rates_modifier, population_modifier, silent=Fal
     #Run the SLiM simulation to create the tree sequence
     if not silent:
         print("Running SLiM simulation...")
-    subprocess.run(['slim', '-l', '0', '-d', f'POPMULT={population_modifier}', Path('../SLiM Code/CPBSampleSim.slim')])
+    subprocess.run(['slim', '-l', '0', '-d', f'POPMULT={population_modifier}', Path('../SLiM_Code/CPBSampleSim.slim')])
     
     #Does recapitation and mutation addition, then gets diversity and divergence statistics
     if not silent:
