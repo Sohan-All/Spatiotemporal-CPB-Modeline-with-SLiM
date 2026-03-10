@@ -13,6 +13,8 @@ import AnalyzeTreeSeq
 import subprocess
 
 import warnings
+import platform
+import sys
 
 #WARNING: don't run this file in VSCode. Run it in the terminal instead.
 
@@ -52,7 +54,14 @@ def main(num_clusters, migration_rates_modifier, population_modifier, silent=Fal
     #Run the SLiM simulation to create the tree sequence
     if not silent:
         print("Running SLiM simulation...")
-    subprocess.run(['slim', '-l', '0', '-d', f'POPMULT={population_modifier}', Path('../SLiM_Code/CPBSampleSim.slim')])
+    
+    #Run the appropriate SLiM script based on the operating system, passing in the population modifier as a parameter
+    if platform.system() == "Windows":
+        subprocess.run(['slim', '-l', '0', '-d', f'POPMULT={population_modifier}', str(Path('../SLiM_Code/CPBSampleSimWin.slim'))])
+    elif platform.system() == "Linux":
+        subprocess.run(['slim', '-l', '0', '-d', f'POPMULT={population_modifier}', str(Path('../SLiM_Code/CPBSampleSimLinux.slim'))])
+    else:
+        raise OSError(f"Unsupported operating system: {platform.system()}")
     
     #Does recapitation and mutation addition, then gets diversity and divergence statistics
     if not silent:

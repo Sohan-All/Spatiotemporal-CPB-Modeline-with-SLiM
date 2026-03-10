@@ -1,0 +1,58 @@
+// set up a simple neutral simulation
+initialize()
+{
+    initializeTreeSeq(simplificationRatio=INF, timeUnit="generations");
+    //initializeMutationRate(1e-7); uncomment for non-neutral simulations
+    initializeMutationRate(0);
+    //initializeMutationType("m1", 0.5, "f", 0.1);
+    initializeMutationType("m1", 0.5, "f", 0.0);
+    m1.convertToSubstitution = F;
+    initializeGenomicElementType("g1", m1, 1);
+    initializeGenomicElement(g1, 0, 1e6 - 1);
+    initializeRecombinationRate(1e-8);
+} 
+
+
+1 early()
+{
+    // Read in cluster data from CSV files
+    migrationRatesDF = readCSV("../data/migration_rates.csv", colNames=T, sep=",");
+    
+    propDF = readCSV("../data/cluster_data.csv", colNames=T, sep=",");
+
+
+    migrationRates = migrationRatesDF.asMatrix();
+
+    // Create each subpopulation based on the amount of clusters specified
+    // Sets the population of each supop to the average count of individuals in that cluster times a multiplier
+    numSubpops = propDF.nrow;
+    for (i in 0:(propDF.nrow-1)) {
+        sim.addSubpop("p"+i, asInteger(propDF.getValue("Average Count")[i] * POPMULT / numSubpops));
+    }
+
+    // Set the migration rates for each subpopulation pair based on the migration rates matrix
+    for (i in 0:(ncol(migrationRates)-1)) {
+        for (j in 0:(nrow(migrationRates)-1)) {
+            if (i != j) 
+                sim.subpopulations[i].setMigrationRates(sim.subpopulations[j], migrationRates[i+ncol(migrationRates)*j]);
+        }
+    }
+}
+
+
+308 late()
+{
+    sim.treeSeqRememberIndividuals(sim.subpopulations.individuals, T);
+}
+
+316 late() 
+{
+    sim.treeSeqRememberIndividuals(sim.subpopulations.individuals, T);
+}
+
+324 late()
+{
+    sim.treeSeqOutput("../out/simTreeSeq.trees");
+
+	sim.simulationFinished();
+}
