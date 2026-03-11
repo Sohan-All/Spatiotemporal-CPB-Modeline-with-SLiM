@@ -44,7 +44,7 @@ def model(parameter):
     
     
     #Read in the output data
-    outDict = {"2015": {}, "2019": {}, "2023": {}}
+    outDict = {}
     
     for year in ["2015", "2019", "2023"]:
         with open(Path(f"..\\data\\Output_data\\diversities_{year}.csv"), mode='r', newline='', encoding='utf-8') as csvfile:
@@ -55,7 +55,7 @@ def model(parameter):
                 if value is not None and value.strip() != "":
                     diversities_list.append(float(value.strip()))
             diversities = np.array(diversities_list)
-            outDict[year]["diversities"] = diversities
+            outDict[f"{year}_diversity"] = diversities
         
         with open(Path(f"..\\data\\Output_data\\divergences_{year}.csv"), mode='r', newline='', encoding='utf-8') as csvfile:
             reader = csv.reader(csvfile)
@@ -72,7 +72,7 @@ def model(parameter):
                         row_vals.append(float(v))
             matrix.append(row_vals)
             divergences = np.array(matrix, dtype=float)
-            outDict[year]["divergences"] = divergences
+            outDict[f"{year}_divergence"] = divergences
         
 
     return outDict
@@ -86,8 +86,8 @@ def distance(x, x0):
     Pi is nucleotide diversity given in the form of a list of values for each population.
     dxy is genetic differentiation given in the form of a matrix of values between populations.
     
-    x should be a dictionary with keys "2015", "2019", "2023". Each of these keys has values: "diversities" and "divergences"
-    which are the pi and dxy values in list and matrix form, respectively.
+    x should be a dictionary with keys "2015_diversity", "2015_divergence", "2019_diversity", "2019_divergence",
+    "2023_diversity", and "2023_divergence".
     
     Each of these values is an array of three of these values, one for each year (2015, 2019, 2023).
     
@@ -95,23 +95,26 @@ def distance(x, x0):
     '''
     total_distance = 0
     
-    for year in ["2015", "2019", "2023"]:    
+    for year in ["2015", "2019", "2023"]:
+        diversity_key = f"{year}_diversity"
+        divergence_key = f"{year}_divergence"
+
         # Pi distance
-        for i in range(len(x[year]["diversities"])):
-            pi_distance = abs(x[year]["diversities"][i] - x0[year]["diversities"][i])
-            pi_distance *= len(x[year]["diversities"]) #weight pi distance equally to fst distance
+        for i in range(len(x[diversity_key])):
+            pi_distance = abs(x[diversity_key][i] - x0[diversity_key][i])
+            pi_distance *= len(x[diversity_key]) #weight pi distance equally to fst distance
             total_distance += pi_distance
         # Fst distance
-        for i in range(len(x[year]["divergences"])):
-            for k in range(len(x[year]["divergences"])):
+        for i in range(len(x[divergence_key])):
+            for k in range(len(x[divergence_key])):
                 if i != k:
-                    fst_distance = abs(x[year]["divergences"][i][k] - x0[year]["divergences"][i][k])
+                    fst_distance = abs(x[divergence_key][i][k] - x0[divergence_key][i][k])
                     total_distance += fst_distance
                     
     return total_distance
 
 def getObservedData():
-    outDict = {"2015": {}, "2019": {}, "2023": {}}
+    outDict = {}
     
     for year in ["2015", "2019", "2023"]:
         path = f"..\\data\\empiricalStats\\averaged_pi_{year}.csv"
@@ -123,7 +126,7 @@ def getObservedData():
                 if value is not None and value.strip() != "":
                     diversities_list.append(float(value.strip()))
             diversities = np.array(diversities_list)
-            outDict[year]["diversities"] = diversities
+            outDict[f"{year}_diversity"] = diversities
         
         path = f"..\\data\\empiricalStats\\averaged_dxy_{year}.csv"
         with open(Path(path), mode='r', newline='', encoding='utf-8') as csvfile:
@@ -141,7 +144,7 @@ def getObservedData():
                         row_vals.append(float(v))
             matrix.append(row_vals)
             divergences = np.array(matrix, dtype=float)
-            outDict[year]["divergences"] = divergences
+            outDict[f"{year}_divergence"] = divergences
             
     return outDict
     
