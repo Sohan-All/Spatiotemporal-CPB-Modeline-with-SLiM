@@ -47,7 +47,7 @@ def model(parameter):
     outDict = {}
     
     for year in ["2015", "2019", "2023"]:
-        with open(Path(f"..\\data\\Output_data\\diversities_{year}.csv"), mode='r', newline='', encoding='utf-8') as csvfile:
+        with open(Path(f"../data/Output_data/diversities_{year}.csv"), mode='r', newline='', encoding='utf-8') as csvfile:
             div2015 = csv.DictReader(csvfile)
             diversities_list = []
             for row in div2015:
@@ -57,7 +57,7 @@ def model(parameter):
             diversities = np.array(diversities_list)
             outDict[f"{year}_diversity"] = diversities
         
-        with open(Path(f"..\\data\\Output_data\\divergences_{year}.csv"), mode='r', newline='', encoding='utf-8') as csvfile:
+        with open(Path(f"../data/Output_data/divergences_{year}.csv"), mode='r', newline='', encoding='utf-8') as csvfile:
             reader = csv.reader(csvfile)
             matrix = []
             for row in reader:
@@ -117,7 +117,7 @@ def getObservedData():
     outDict = {}
     
     for year in ["2015", "2019", "2023"]:
-        path = f"..\\data\\empiricalStats\\averaged_pi_{year}.csv"
+        path = f"../data/empiricalStats/averaged_pi_{year}.csv"
         with open(Path(path), mode='r', newline='', encoding='utf-8') as csvfile:
             div2015 = csv.DictReader(csvfile)
             diversities_list = []
@@ -128,7 +128,7 @@ def getObservedData():
             diversities = np.array(diversities_list)
             outDict[f"{year}_diversity"] = diversities
         
-        path = f"..\\data\\empiricalStats\\averaged_dxy_{year}.csv"
+        path = f"../data/empiricalStats/averaged_dxy_{year}.csv"
         with open(Path(path), mode='r', newline='', encoding='utf-8') as csvfile:
             reader = csv.reader(csvfile)
             matrix = []
