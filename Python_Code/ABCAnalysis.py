@@ -8,8 +8,8 @@ import numpy as np
 from pathlib import Path
 
 import pyabc
-
 from pyabc.transition import MultivariateNormalTransition
+from pyabc.sampler import RedisEvalParallelSampler
 
 import Main
 
@@ -145,9 +145,10 @@ def getObservedData():
     
 
 
+redis_sampler = RedisEvalParallelSampler(host="144.92.32.204", port=6379)
 
 
-abc = pyabc.ABCSMC(model, prior, distance, population_size=500, transitions=MultivariateNormalTransition())
+abc = pyabc.ABCSMC(model, prior, distance, population_size=500, transitions=MultivariateNormalTransition(), sampler=redis_sampler)
 
 db_path = os.path.join(tempfile.gettempdir(), "test.db")
 
