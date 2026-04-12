@@ -23,7 +23,6 @@ prior = pyabc.Distribution(
 
 
 
-
 def model(parameter):
     '''
     The model function that runs the SLiM simulation with the given parameters: 
@@ -149,11 +148,12 @@ def getObservedData():
     return outDict
     
 
-
-redis_sampler = RedisEvalParallelSampler(host="144.92.32.204", port=6379)
-
-
+#with redis
+redis_sampler = RedisEvalParallelSampler(host="111.111.111.111", port=6379)
 abc = pyabc.ABCSMC(model, prior, distance, population_size=500, transitions=MultivariateNormalTransition(), sampler=redis_sampler)
+
+#without redis
+#abc = pyabc.ABCSMC(model, prior, distance, population_size=500, transitions=MultivariateNormalTransition())
 
 db_path = os.path.join(tempfile.gettempdir(), "test.db")
 

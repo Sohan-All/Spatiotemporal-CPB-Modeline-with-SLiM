@@ -1,7 +1,8 @@
 from pathlib import Path
 
 import tskit
-import msprime, pyslim
+import msprime
+import pyslim
 import pandas as pd
 import math
 import numpy as np
