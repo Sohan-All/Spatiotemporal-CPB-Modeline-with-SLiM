@@ -156,7 +156,7 @@ def sample_prior():
     }
 
 
-def run_abc_simulation(num_iterations, output_csv="abc_results.csv"):
+def run_abc_simulation(num_iterations, output_csv="../out/abc_results.csv"):
     '''
     Run ABC simulations by repeatedly sampling from the prior and computing losses.
     Results are appended to a CSV file.
@@ -164,6 +164,7 @@ def run_abc_simulation(num_iterations, output_csv="abc_results.csv"):
     :param num_iterations: Number of iterations to run
     :param output_csv: Path to the output CSV file
     '''
+
     observed_data = getObservedData()
     
     # Determine if we need to write the header
@@ -225,10 +226,10 @@ def run_abc_simulation(num_iterations, output_csv="abc_results.csv"):
                 print(f"  Error in iteration {iteration}: {e}")
                 continue
     
-    print(f"Simulation complete. Results saved to {output_csv}")
+    print(f"Simulation {iteration + 1} complete. Results saved to {output_csv}")
 
 
 if __name__ == "__main__":
     # Run 100 iterations of ABC sampling
     # Modify num_iterations as desired
-    run_abc_simulation(num_iterations=100, output_csv="abc_results.csv")
+    run_abc_simulation(num_iterations=1, output_csv="../out/abc_results.csv")
