@@ -31,14 +31,14 @@ def model(parameter):
     numClusters = parameter["numClusters"] * 33  #scale to 33, 66, or 99
     
     #Run the model TODO:change silent to true for actual runs
-    Main.main(num_clusters=numClusters, migration_rates_modifier=m, population_modifier=pop, silent=False)
+    Main.main(num_clusters=numClusters, migration_rates_modifier=m, population_modifier=pop, silent=True)
     
     
     #Read in the output data
     outDict = {}
     
     for year in ["2015", "2019", "2023"]:
-        with open(Path(f"../data/Output_data/diversities_{year}.csv"), mode='r', newline='', encoding='utf-8') as csvfile:
+        with open(Path(f"../data/Output_Data/diversities_{year}.csv"), mode='r', newline='', encoding='utf-8') as csvfile:
             div2015 = csv.DictReader(csvfile)
             diversities_list = []
             for row in div2015:
@@ -48,7 +48,7 @@ def model(parameter):
             diversities = np.array(diversities_list)
             outDict[f"{year}_diversity"] = diversities
         
-        with open(Path(f"../data/Output_data/divergences_{year}.csv"), mode='r', newline='', encoding='utf-8') as csvfile:
+        with open(Path(f"../data/Output_Data/divergences_{year}.csv"), mode='r', newline='', encoding='utf-8') as csvfile:
             reader = csv.reader(csvfile)
             matrix = []
             for row in reader:
