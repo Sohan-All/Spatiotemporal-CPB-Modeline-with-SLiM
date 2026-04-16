@@ -30,8 +30,8 @@ def model(parameter):
     pop = int(np.floor(parameter["pop"]))
     numClusters = parameter["numClusters"] * 33  #scale to 33, 66, or 99
     
-    #Run the model
-    Main.main(num_clusters=numClusters, migration_rates_modifier=m, population_modifier=pop, silent=True)
+    #Run the model TODO:change silent to true for actual runs
+    Main.main(num_clusters=numClusters, migration_rates_modifier=m, population_modifier=pop, silent=False)
     
     
     #Read in the output data
