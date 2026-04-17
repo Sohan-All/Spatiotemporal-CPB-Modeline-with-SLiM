@@ -232,4 +232,4 @@ def run_abc_simulation(num_iterations, output_csv="../out/abc_results.csv"):
 if __name__ == "__main__":
     # Run 100 iterations of ABC sampling
     # Modify num_iterations as desired
-    run_abc_simulation(num_iterations=1, output_csv="../out/abc_results.csv")
+    run_abc_simulation(num_iterations=100, output_csv="../out/abc_results.csv")
