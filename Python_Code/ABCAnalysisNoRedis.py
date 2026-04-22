@@ -6,11 +6,17 @@ from scipy import stats
 
 import Main
 
+# Default parameter values for log-normal distributions
+DEFAULT_MUTATION_RATE = 2.1e-9
+DEFAULT_RECOMBINATION_RATE = 2.75e-6
+
 # Define prior distributions using scipy.stats
 prior_distributions = {
     "m": stats.lognorm(s=1.5, scale=np.exp(np.log(0.0001))),
     "pop": stats.expon(loc=2000, scale=50000),
-    "numClusters": stats.randint(1, 4)  # randint(1, 4) gives 1, 2, or 3
+    "numClusters": stats.randint(1, 4),  # randint(1, 4) gives 1, 2, or 3
+    "mutation_rate": stats.lognorm(s=0.5, scale=DEFAULT_MUTATION_RATE),  # log-normal around default
+    "recombination_rate": stats.lognorm(s=0.5, scale=DEFAULT_RECOMBINATION_RATE)  # log-normal around default
 }
 
 
@@ -20,18 +26,23 @@ def model(parameter):
     The model function that runs the SLiM simulation with the given parameters: 
     1. migration rate (m)
     2. population size (pop)
-    3. number of clusters (numClusters)   
+    3. number of clusters (numClusters)
+    4. mutation rate (mutation_rate)
+    5. recombination rate (recombination_rate)
     
     :param parameter: This is a dictionary containing the parameters for the simulation.
     '''
     
     #Get the parameters
-    m = parameter["m"]
-    pop = int(np.floor(parameter["pop"]))
-    numClusters = parameter["numClusters"] * 33  #scale to 33, 66, or 99
+    m = parameter.get("m", prior_distributions["m"].rvs())
+    pop = int(np.floor(parameter.get("pop", prior_distributions["pop"].rvs())))
+    numClusters = parameter.get("numClusters", prior_distributions["numClusters"].rvs()) * 33  #scale to 33, 66, or 99
+    mutation_rate = parameter.get("mutation_rate", DEFAULT_MUTATION_RATE)
+    recombination_rate = parameter.get("recombination_rate", DEFAULT_RECOMBINATION_RATE)
     
     #Run the model TODO:change silent to true for actual runs
-    Main.main(num_clusters=numClusters, migration_rates_modifier=m, population_modifier=pop, silent=True)
+    Main.main(num_clusters=numClusters, migration_rates_modifier=m, population_modifier=pop, 
+              mutation_rate=mutation_rate, recombination_rate=recombination_rate, silent=True)
     
     
     #Read in the output data
@@ -152,8 +163,124 @@ def sample_prior():
     return {
         "m": prior_distributions["m"].rvs(),
         "pop": prior_distributions["pop"].rvs(),
-        "numClusters": prior_distributions["numClusters"].rvs()
+        "numClusters": prior_distributions["numClusters"].rvs(),
+        "mutation_rate": prior_distributions["mutation_rate"].rvs(),
+        "recombination_rate": prior_distributions["recombination_rate"].rvs()
     }
+
+
+def run_abc_simulation_sensitivity(output_csv="../out/abc_results.csv"):
+    '''
+    Run ABC simulations with sensitivity analysis: 35 iterations in 5 sets of 7.
+    Each set varies a single parameter according to its distribution while keeping others fixed.
+    
+    Parameter sets:
+    1. Vary migration rate (m)
+    2. Vary population size (pop)
+    3. Vary number of clusters (numClusters)
+    4. Vary mutation rate (with log-normal distribution)
+    5. Vary recombination rate (with log-normal distribution)
+    
+    :param output_csv: Path to the output CSV file
+    '''
+    
+    observed_data = getObservedData()
+    
+    # Determine if we need to write the header
+    csv_exists = Path(output_csv).exists()
+    
+    # Define CSV columns
+    fieldnames = ["iteration", "set", "varied_parameter", "m", "pop", "numClusters", 
+                  "mutation_rate", "recombination_rate",
+                  "diversity_loss_2015", "diversity_loss_2019", "diversity_loss_2023",
+                  "divergence_loss_2015", "divergence_loss_2019", "divergence_loss_2023",
+                  "total_loss"]
+    
+    # Get baseline parameters (sample once to establish central values for fixed parameters)
+    baseline = {
+        "m": prior_distributions["m"].rvs(),
+        "pop": prior_distributions["pop"].rvs(),
+        "numClusters": prior_distributions["numClusters"].rvs(),
+        "mutation_rate": DEFAULT_MUTATION_RATE,
+        "recombination_rate": DEFAULT_RECOMBINATION_RATE
+    }
+    
+    # Define the 5 parameter sets
+    parameter_sets = [
+        {"name": "migration_rate", "param_key": "m", "values": [prior_distributions["m"].rvs() for _ in range(7)]},
+        {"name": "population_size", "param_key": "pop", "values": [prior_distributions["pop"].rvs() for _ in range(7)]},
+        {"name": "num_clusters", "param_key": "numClusters", "values": [prior_distributions["numClusters"].rvs() for _ in range(7)]},
+        {"name": "mutation_rate", "param_key": "mutation_rate", "values": [prior_distributions["mutation_rate"].rvs() for _ in range(7)]},
+        {"name": "recombination_rate", "param_key": "recombination_rate", "values": [prior_distributions["recombination_rate"].rvs() for _ in range(7)]}
+    ]
+    
+    iteration = 0
+    
+    with open(output_csv, mode='a', newline='', encoding='utf-8') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        
+        # Write header only if file is new
+        if not csv_exists:
+            writer.writeheader()
+        
+        # Iterate through each parameter set
+        for set_idx, param_set in enumerate(parameter_sets):
+            set_name = param_set["name"]
+            param_key = param_set["param_key"]
+            values = param_set["values"]
+            
+            print(f"\n=== Set {set_idx + 1}: Varying {set_name} ===")
+            
+            for i, value in enumerate(values):
+                # Create parameters for this iteration
+                parameters = baseline.copy()
+                parameters[param_key] = value
+                
+                print(
+                    f"Running iteration {iteration + 1}/35 (Set {set_idx + 1}, Sample {i + 1}/7) "
+                    f"varying {set_name}: {param_key}={value:.6g}..."
+                )
+                
+                try:
+                    # Run the model
+                    simulated_data = model(parameters)
+                    
+                    # Calculate losses
+                    losses = calculate_losses(observed_data, simulated_data)
+                    
+                    # Prepare row for CSV
+                    row = {
+                        "iteration": iteration,
+                        "set": set_idx + 1,
+                        "varied_parameter": set_name,
+                        "m": parameters["m"],
+                        "pop": parameters["pop"],
+                        "numClusters": parameters["numClusters"],
+                        "mutation_rate": parameters["mutation_rate"],
+                        "recombination_rate": parameters["recombination_rate"],
+                        "diversity_loss_2015": losses["diversity_loss_2015"],
+                        "diversity_loss_2019": losses["diversity_loss_2019"],
+                        "diversity_loss_2023": losses["diversity_loss_2023"],
+                        "divergence_loss_2015": losses["divergence_loss_2015"],
+                        "divergence_loss_2019": losses["divergence_loss_2019"],
+                        "divergence_loss_2023": losses["divergence_loss_2023"],
+                        "total_loss": losses["total_loss"]
+                    }
+                    
+                    # Append to CSV
+                    writer.writerow(row)
+                    csvfile.flush()  # Ensure data is written immediately
+                    
+                    print(f"  Total loss: {losses['total_loss']:.6f}")
+                    iteration += 1
+                    
+                except Exception as e:
+                    print(f"  Error in iteration {iteration}: {e}")
+                    iteration += 1
+                    continue
+    
+    print(f"\n=== Sensitivity Analysis Complete ===")
+    print(f"Total iterations: {iteration}/35. Results saved to {output_csv}")
 
 
 def run_abc_simulation(num_iterations, output_csv="../out/abc_results.csv"):
@@ -171,7 +298,7 @@ def run_abc_simulation(num_iterations, output_csv="../out/abc_results.csv"):
     csv_exists = Path(output_csv).exists()
     
     # Define CSV columns
-    fieldnames = ["iteration", "m", "pop", "numClusters",
+    fieldnames = ["iteration", "m", "pop", "numClusters", "mutation_rate", "recombination_rate",
                   "diversity_loss_2015", "diversity_loss_2019", "diversity_loss_2023",
                   "divergence_loss_2015", "divergence_loss_2019", "divergence_loss_2023",
                   "total_loss"]
@@ -188,11 +315,10 @@ def run_abc_simulation(num_iterations, output_csv="../out/abc_results.csv"):
             print(
                 f"Running iteration {iteration + 1}/{num_iterations} "
                 f"with m={parameters['m']:.6g}, pop={int(np.floor(parameters['pop']))}, "
-                f"numClusters={parameters['numClusters'] * 33}..."
+                f"numClusters={parameters['numClusters'] * 33}, "
+                f"mutation_rate={parameters['mutation_rate']:.6g}, "
+                f"recombination_rate={parameters['recombination_rate']:.6g}..."
             )
-            
-            # Sample from prior
-            parameters = sample_prior()
             
             try:
                 # Run the model
@@ -207,6 +333,8 @@ def run_abc_simulation(num_iterations, output_csv="../out/abc_results.csv"):
                     "m": parameters["m"],
                     "pop": parameters["pop"],
                     "numClusters": parameters["numClusters"],
+                    "mutation_rate": parameters["mutation_rate"],
+                    "recombination_rate": parameters["recombination_rate"],
                     "diversity_loss_2015": losses["diversity_loss_2015"],
                     "diversity_loss_2019": losses["diversity_loss_2019"],
                     "diversity_loss_2023": losses["diversity_loss_2023"],
@@ -230,6 +358,6 @@ def run_abc_simulation(num_iterations, output_csv="../out/abc_results.csv"):
 
 
 if __name__ == "__main__":
-    # Run 100 iterations of ABC sampling
-    # Modify num_iterations as desired
-    run_abc_simulation(num_iterations=100, output_csv="../out/abc_results.csv")
+    # Run 35 iterations of ABC sampling with sensitivity analysis
+    # Each of 5 sets varies a single parameter (7 samples per set)
+    run_abc_simulation_sensitivity(output_csv="../out/abc_results.csv")

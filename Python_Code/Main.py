@@ -18,15 +18,15 @@ import sys
 
 #WARNING: don't run this file in VSCode. Run it in the terminal instead.
 
-def main(num_clusters, migration_rates_modifier, population_modifier, silent=False):
+def main(num_clusters, migration_rates_modifier, population_modifier, mutation_rate=2.1e-9, recombination_rate=2.75e-6, silent=False):
     #hehehe
     warnings.filterwarnings("ignore")
     
     #Query for mutation rate
-    mutation_rate = 2.1e-9 #float(input("Enter the mutation rate (default 1e-7): ").strip() or 2.1e-9)
+    #mutation_rate = 2.1e-9 #float(input("Enter the mutation rate (default 1e-7): ").strip() or 2.1e-9)
 
     #Query for recombination rate
-    recombination_rate = 2.75e-6 #float(input("Enter the recombination rate (default 1e-8): ").strip() or 2.75e-6)
+    #recombination_rate = 2.75e-6 #float(input("Enter the recombination rate (default 1e-8): ").strip() or 2.75e-6)
         
     #Start by reading the data from final_data_for_modeling.csv
     if not silent:
