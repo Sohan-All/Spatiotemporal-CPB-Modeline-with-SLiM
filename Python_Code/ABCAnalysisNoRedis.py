@@ -196,11 +196,11 @@ def run_abc_simulation_sensitivity(output_csv="../out/abc_results.csv"):
                   "divergence_loss_2015", "divergence_loss_2019", "divergence_loss_2023",
                   "total_loss"]
     
-    # Get baseline parameters (sample once to establish central values for fixed parameters)
+    # Get baseline parameters (fixed default values when not being varied)
     baseline = {
-        "m": prior_distributions["m"].rvs(),
-        "pop": prior_distributions["pop"].rvs(),
-        "numClusters": prior_distributions["numClusters"].rvs(),
+        "m": 0.0001,
+        "pop": 20000,
+        "numClusters": 3,
         "mutation_rate": DEFAULT_MUTATION_RATE,
         "recombination_rate": DEFAULT_RECOMBINATION_RATE
     }
@@ -208,7 +208,7 @@ def run_abc_simulation_sensitivity(output_csv="../out/abc_results.csv"):
     # Define the 5 parameter sets
     parameter_sets = [
         {"name": "migration_rate", "param_key": "m", "values": [prior_distributions["m"].rvs() for _ in range(7)]},
-        {"name": "population_size", "param_key": "pop", "values": [prior_distributions["pop"].rvs() for _ in range(7)]},
+        {"name": "population_size", "param_key": "pop", "values": [min(prior_distributions["pop"].rvs(), 50000) for _ in range(7)]},
         {"name": "num_clusters", "param_key": "numClusters", "values": [prior_distributions["numClusters"].rvs() for _ in range(7)]},
         {"name": "mutation_rate", "param_key": "mutation_rate", "values": [prior_distributions["mutation_rate"].rvs() for _ in range(7)]},
         {"name": "recombination_rate", "param_key": "recombination_rate", "values": [prior_distributions["recombination_rate"].rvs() for _ in range(7)]}
