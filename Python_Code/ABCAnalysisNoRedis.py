@@ -1,5 +1,7 @@
 import csv
 import numpy as np
+import sys
+import shutil
 
 from pathlib import Path
 from scipy import stats
@@ -169,52 +171,90 @@ def sample_prior():
     }
 
 
-def run_abc_simulation_sensitivity(output_csv="../out/abc_results.csv"):
+def read_parameters_from_csv(csv_path):
     '''
-    Run ABC simulations with sensitivity analysis: 35 iterations in 5 sets of 7.
-    Each set varies a single parameter according to its distribution while keeping others fixed.
+    Read parameter configurations from a CSV file.
     
-    Parameter sets:
-    1. Vary migration rate (m)
-    2. Vary population size (pop)
-    3. Vary number of clusters (numClusters)
-    4. Vary mutation rate (with log-normal distribution)
-    5. Vary recombination rate (with log-normal distribution)
+    Expected CSV columns: m, pop, numClusters, mutation_rate, recombination_rate
+    Each row represents one simulation to run.
     
-    :param output_csv: Path to the output CSV file
+    :param csv_path: Path to the CSV file with parameters
+    :return: List of dictionaries, each containing parameters for one simulation
     '''
+    parameters_list = []
+    
+    try:
+        with open(csv_path, mode='r', newline='', encoding='utf-8') as csvfile:
+            reader = csv.DictReader(csvfile)
+            
+            if reader.fieldnames is None:
+                raise ValueError(f"CSV file {csv_path} is empty or has no headers")
+            
+            # Validate that all required columns are present
+            required_cols = {"m", "pop", "numClusters", "mutation_rate", "recombination_rate"}
+            csv_cols = set(reader.fieldnames)
+            missing_cols = required_cols - csv_cols
+            
+            if missing_cols:
+                raise ValueError(f"CSV file missing required columns: {missing_cols}. "
+                                f"Required columns: {required_cols}")
+            
+            for row_idx, row in enumerate(reader, start=2):  # start=2 because row 1 is header
+                try:
+                    parameters = {
+                        "m": float(row["m"]),
+                        "pop": int(float(row["pop"])),  # Convert to float first to handle scientific notation
+                        "numClusters": int(float(row["numClusters"])),
+                        "mutation_rate": float(row["mutation_rate"]),
+                        "recombination_rate": float(row["recombination_rate"])
+                    }
+                    parameters_list.append(parameters)
+                except ValueError as e:
+                    print(f"Warning: Row {row_idx} in {csv_path} has invalid values: {e}")
+                    continue
+        
+        if not parameters_list:
+            raise ValueError(f"No valid parameter configurations found in {csv_path}")
+        
+        print(f"Loaded {len(parameters_list)} parameter configuration(s) from {csv_path}")
+        return parameters_list
+    
+    except FileNotFoundError:
+        raise FileNotFoundError(f"Input CSV file not found: {csv_path}")
+
+
+def run_sims_from_csv(input_csv, output_csv="../out/abc_results.csv"):
+    '''
+    Run ABC simulations with parameters specified in a CSV file.
+    Each row in the input CSV represents one simulation.
+    Detailed simulation outputs (diversities and divergences) are saved to detailed_sim_results folder.
+    
+    :param input_csv: Path to the CSV file with input parameters
+    :param output_csv: Path to the output CSV file for results
+    '''
+    
+    try:
+        parameters_list = read_parameters_from_csv(input_csv)
+    except Exception as e:
+        print(f"Error reading input CSV: {e}")
+        return
     
     observed_data = getObservedData()
     
     # Determine if we need to write the header
     csv_exists = Path(output_csv).exists()
     
+    # Create detailed results directory
+    output_dir = Path(output_csv).parent
+    detailed_results_dir = output_dir / "detailed_sim_results"
+    detailed_results_dir.mkdir(parents=True, exist_ok=True)
+    print(f"Detailed results will be saved to: {detailed_results_dir}")
+    
     # Define CSV columns
-    fieldnames = ["iteration", "set", "varied_parameter", "m", "pop", "numClusters", 
-                  "mutation_rate", "recombination_rate",
+    fieldnames = ["iteration", "m", "pop", "numClusters", "mutation_rate", "recombination_rate",
                   "diversity_loss_2015", "diversity_loss_2019", "diversity_loss_2023",
                   "divergence_loss_2015", "divergence_loss_2019", "divergence_loss_2023",
                   "total_loss"]
-    
-    # Get baseline parameters (fixed default values when not being varied)
-    baseline = {
-        "m": 0.0001,
-        "pop": 20000,
-        "numClusters": 3,
-        "mutation_rate": DEFAULT_MUTATION_RATE,
-        "recombination_rate": DEFAULT_RECOMBINATION_RATE
-    }
-    
-    # Define the 5 parameter sets
-    parameter_sets = [
-        {"name": "migration_rate", "param_key": "m", "values": [prior_distributions["m"].rvs() for _ in range(7)]},
-        {"name": "population_size", "param_key": "pop", "values": [min(prior_distributions["pop"].rvs(), 50000) for _ in range(7)]},
-        {"name": "num_clusters", "param_key": "numClusters", "values": [prior_distributions["numClusters"].rvs() for _ in range(7)]},
-        {"name": "mutation_rate", "param_key": "mutation_rate", "values": [prior_distributions["mutation_rate"].rvs() for _ in range(7)]},
-        {"name": "recombination_rate", "param_key": "recombination_rate", "values": [prior_distributions["recombination_rate"].rvs() for _ in range(7)]}
-    ]
-    
-    iteration = 0
     
     with open(output_csv, mode='a', newline='', encoding='utf-8') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
@@ -223,64 +263,71 @@ def run_abc_simulation_sensitivity(output_csv="../out/abc_results.csv"):
         if not csv_exists:
             writer.writeheader()
         
-        # Iterate through each parameter set
-        for set_idx, param_set in enumerate(parameter_sets):
-            set_name = param_set["name"]
-            param_key = param_set["param_key"]
-            values = param_set["values"]
+        for iteration, parameters in enumerate(parameters_list):
+            print(
+                f"Running iteration {iteration + 1}/{len(parameters_list)} "
+                f"with m={parameters['m']:.6g}, pop={int(np.floor(parameters['pop']))}, "
+                f"numClusters={parameters['numClusters'] * 33}, "
+                f"mutation_rate={parameters['mutation_rate']:.6g}, "
+                f"recombination_rate={parameters['recombination_rate']:.6g}..."
+            )
             
-            print(f"\n=== Set {set_idx + 1}: Varying {set_name} ===")
-            
-            for i, value in enumerate(values):
-                # Create parameters for this iteration
-                parameters = baseline.copy()
-                parameters[param_key] = value
+            try:
+                # Run the model
+                simulated_data = model(parameters)
                 
-                print(
-                    f"Running iteration {iteration + 1}/35 (Set {set_idx + 1}, Sample {i + 1}/7) "
-                    f"varying {set_name}: {param_key}={value:.6g}..."
-                )
+                # Calculate losses
+                losses = calculate_losses(observed_data, simulated_data)
                 
-                try:
-                    # Run the model
-                    simulated_data = model(parameters)
+                # Copy detailed results for this iteration
+                iteration_dir = detailed_results_dir / f"run{iteration + 1}"
+                iteration_dir.mkdir(parents=True, exist_ok=True)
+                
+                for year in ["2015", "2019", "2023"]:
+                    # Copy diversities
+                    diversity_src = Path(f"../data/Output_Data/diversities_{year}.csv")
+                    diversity_dest = iteration_dir / f"diversities_{year}.csv"
+                    if diversity_src.exists():
+                        shutil.copy2(diversity_src, diversity_dest)
                     
-                    # Calculate losses
-                    losses = calculate_losses(observed_data, simulated_data)
-                    
-                    # Prepare row for CSV
-                    row = {
-                        "iteration": iteration,
-                        "set": set_idx + 1,
-                        "varied_parameter": set_name,
-                        "m": parameters["m"],
-                        "pop": parameters["pop"],
-                        "numClusters": parameters["numClusters"],
-                        "mutation_rate": parameters["mutation_rate"],
-                        "recombination_rate": parameters["recombination_rate"],
-                        "diversity_loss_2015": losses["diversity_loss_2015"],
-                        "diversity_loss_2019": losses["diversity_loss_2019"],
-                        "diversity_loss_2023": losses["diversity_loss_2023"],
-                        "divergence_loss_2015": losses["divergence_loss_2015"],
-                        "divergence_loss_2019": losses["divergence_loss_2019"],
-                        "divergence_loss_2023": losses["divergence_loss_2023"],
-                        "total_loss": losses["total_loss"]
-                    }
-                    
-                    # Append to CSV
-                    writer.writerow(row)
-                    csvfile.flush()  # Ensure data is written immediately
-                    
-                    print(f"  Total loss: {losses['total_loss']:.6f}")
-                    iteration += 1
-                    
-                except Exception as e:
-                    print(f"  Error in iteration {iteration}: {e}")
-                    iteration += 1
-                    continue
+                    # Copy divergences
+                    divergence_src = Path(f"../data/Output_Data/divergences_{year}.csv")
+                    divergence_dest = iteration_dir / f"divergences_{year}.csv"
+                    if divergence_src.exists():
+                        shutil.copy2(divergence_src, divergence_dest)
+                
+                # Prepare row for CSV
+                row = {
+                    "iteration": iteration,
+                    "m": parameters["m"],
+                    "pop": parameters["pop"],
+                    "numClusters": parameters["numClusters"],
+                    "mutation_rate": parameters["mutation_rate"],
+                    "recombination_rate": parameters["recombination_rate"],
+                    "diversity_loss_2015": losses["diversity_loss_2015"],
+                    "diversity_loss_2019": losses["diversity_loss_2019"],
+                    "diversity_loss_2023": losses["diversity_loss_2023"],
+                    "divergence_loss_2015": losses["divergence_loss_2015"],
+                    "divergence_loss_2019": losses["divergence_loss_2019"],
+                    "divergence_loss_2023": losses["divergence_loss_2023"],
+                    "total_loss": losses["total_loss"]
+                }
+                
+                # Append to CSV
+                writer.writerow(row)
+                csvfile.flush()  # Ensure data is written immediately
+                
+                print(f"  Total loss: {losses['total_loss']:.6f}")
+                print(f"  Detailed results saved to: {iteration_dir}")
+                
+            except Exception as e:
+                print(f"  Error in iteration {iteration}: {e}")
+                continue
     
-    print(f"\n=== Sensitivity Analysis Complete ===")
-    print(f"Total iterations: {iteration}/35. Results saved to {output_csv}")
+    print(f"\n=== CSV-based simulations complete ===")
+    print(f"Total iterations: {len(parameters_list)}. Results saved to {output_csv}")
+    print(f"Detailed simulation data saved to {detailed_results_dir}")
+
 
 
 def run_abc_simulation(num_iterations, output_csv="../out/abc_results.csv"):
@@ -358,6 +405,5 @@ def run_abc_simulation(num_iterations, output_csv="../out/abc_results.csv"):
 
 
 if __name__ == "__main__":
-    # Run 35 iterations of ABC sampling with sensitivity analysis
-    # Each of 5 sets varies a single parameter (7 samples per set)
-    run_abc_simulation_sensitivity(output_csv="../out/abc_results.csv")
+    run_sims_from_csv("./sample_inputs.csv", "../out/abc_results.csv")
+    

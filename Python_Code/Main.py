@@ -19,7 +19,7 @@ import sys
 #WARNING: don't run this file in VSCode. Run it in the terminal instead.
 
 def main(num_clusters, migration_rates_modifier, population_modifier, mutation_rate=2.1e-9, recombination_rate=2.75e-6, silent=False):
-    #hehehe
+    #for cleanliness
     warnings.filterwarnings("ignore")
     
     #Query for mutation rate
