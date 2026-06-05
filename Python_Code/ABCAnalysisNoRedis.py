@@ -223,7 +223,7 @@ def read_parameters_from_csv(csv_path):
         raise FileNotFoundError(f"Input CSV file not found: {csv_path}")
 
 
-def run_sims_from_csv(input_csv, output_csv="../out/abc_results.csv"):
+def run_sims_from_csv(input_csv, output_csv="../out/abc_results.csv", simToRun=-1):
     '''
     Run ABC simulations with parameters specified in a CSV file.
     Each row in the input CSV represents one simulation.
@@ -231,6 +231,7 @@ def run_sims_from_csv(input_csv, output_csv="../out/abc_results.csv"):
     
     :param input_csv: Path to the CSV file with input parameters
     :param output_csv: Path to the output CSV file for results
+    :param simToRun: Index of the specific simulation to run (if -1, run all)
     '''
     
     try:
@@ -264,6 +265,9 @@ def run_sims_from_csv(input_csv, output_csv="../out/abc_results.csv"):
             writer.writeheader()
         
         for iteration, parameters in enumerate(parameters_list):
+            if simToRun != -1 and iteration != simToRun:
+                continue
+
             print(
                 f"Running iteration {iteration + 1}/{len(parameters_list)} "
                 f"with m={parameters['m']:.6g}, pop={int(np.floor(parameters['pop']))}, "
@@ -405,5 +409,10 @@ def run_abc_simulation(num_iterations, output_csv="../out/abc_results.csv"):
 
 
 if __name__ == "__main__":
-    run_sims_from_csv("./sample_inputs.csv", "../out/abc_results.csv")
+    if len(sys.argv) != 2:
+        print("Usage: python ABCAnalysisNoRedis.py <integer>")
+        sys.exit(1)
+    
+    simToRun = int(sys.argv[1])
+    run_sims_from_csv("./sample_inputs.csv", "../out/abc_results.csv", simToRun)
     
