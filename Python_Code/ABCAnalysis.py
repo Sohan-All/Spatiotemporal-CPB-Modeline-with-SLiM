@@ -69,7 +69,7 @@ def model(parameter):
                         row_vals.append(np.nan)
                     else:
                         row_vals.append(float(v))
-            matrix.append(row_vals)
+                matrix.append(row_vals)
             divergences = np.array(matrix, dtype=float)
             outDict[f"{year}_divergence"] = divergences
         
@@ -141,7 +141,7 @@ def getObservedData():
                         row_vals.append(np.nan)
                     else:
                         row_vals.append(float(v))
-            matrix.append(row_vals)
+                matrix.append(row_vals)
             divergences = np.array(matrix, dtype=float)
             outDict[f"{year}_divergence"] = divergences
             
